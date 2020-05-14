@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import cg
 from pymesh import mesh_to_graph
 
 
@@ -67,3 +68,9 @@ def build_divergence_matrix(mesh):
     div_mat = csr_matrix((data, indices, indptr))
 
     return div_mat, edges
+
+
+def project_div_constraint(x, div_mat):
+
+
+    return 0
