@@ -1,6 +1,9 @@
+import warnings
 import numpy as np
+
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import cg
+
 from pymesh import mesh_to_graph
 
 
@@ -70,7 +73,10 @@ def build_divergence_matrix(mesh):
     return div_mat, edges
 
 
-def project_div_constraint(x, div_mat):
+def project_div_constraint(x, b, div_mat):
+    z, info = cg(div_mat.dot(div_mat.transpose()), b - div_mat.dot(x))
 
+    if info != 0:
+        warnings.warn("problem in conjugate gradient !")
 
-    return 0
+    return x + (div_mat.transpose()).dot(z)

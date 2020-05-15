@@ -1,8 +1,8 @@
 import numpy as np
 
 from pytest import approx
-from pymesh import triangle
-from pycheeger import find_threshold, prox_two_inf_norm, build_divergence_matrix
+from pymesh import form_mesh
+from pycheeger import *
 
 
 TOL = 1e-10
@@ -28,21 +28,16 @@ def test_prox_two_inf_norm():
     assert approx(np.linalg.norm(y[2]), 0, TOL)
 
 
-def test_build_divergence_matrix():
+def test_divergence():
     vertices = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
-
-    tri = triangle()
-    tri.points = vertices
-    tri.max_area = 0.25
-    tri.split_boundary = True
-    tri.verbosity = 0
-    tri.run()
-
-    mesh = tri.mesh
+    faces = np.array([[0, 1, 2], [2, 0, 3]])
+    mesh = form_mesh(vertices, faces)
 
     div_mat, edges = build_divergence_matrix(mesh)
 
-    assert div_mat.shape[0] == mesh.num_faces
-    assert div_mat.shape[1] == len(edges)
+    assert np.array_equal(div_mat.toarray(), np.array([[-1, 1, 0, -1, 0], [0, -1, 1, 0, -1]]))
 
-    # TODO: write more tests...
+    x = 2 * np.random.rand(5) - 1
+    proj_x = project_div_constraint(x, np.zeros(2), div_mat)
+
+    assert np.allclose(div_mat.dot(proj_x), 0)
