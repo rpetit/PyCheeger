@@ -73,6 +73,80 @@ def build_divergence_matrix(mesh):
     return div_mat, edges
 
 
+def build_eval_mat(mesh, div_mat, edges):
+    mesh.add_attribute("face_area")
+    faces_area = mesh.get_face_attribute("face_area")
+
+    indptr = [2 * i for i in range(3 * mesh.num_faces + 1)]
+    indices = []
+    data1 = []
+    data2 = []
+
+    for i in range(mesh.num_faces):
+        face_vertices = np.sort(mesh.faces[i])
+
+        for j in range(3):
+            edge_index = find_row_index(edges, np.sort([face_vertices[j], face_vertices[(j+1)%3]]))
+            indices.append(edge_index)
+            data1.append(div_mat[i, edge_index] * (mesh.vertices[face_vertices[j]] - mesh.vertices[face_vertices[(j+2)%3]])[0] / (2 * faces_area[i, 0]))
+            data2.append(div_mat[i, edge_index] * (mesh.vertices[face_vertices[j]] - mesh.vertices[face_vertices[(j+2)%3]])[1] / (2 * faces_area[i, 0]))
+
+            edge_index = find_row_index(edges, np.sort([face_vertices[j], face_vertices[(j+2)%3]]))
+            indices.append(edge_index)
+            data1.append(div_mat[i, edge_index] * (mesh.vertices[face_vertices[j]] - mesh.vertices[face_vertices[(j+1)%3]])[0] / (2 * faces_area[i, 0]))
+            data2.append(div_mat[i, edge_index] * (mesh.vertices[face_vertices[j]] - mesh.vertices[face_vertices[(j+1)%3]])[1] / (2 * faces_area[i, 0]))
+
+    eval_mat1 = csr_matrix((data1, indices, indptr))
+    eval_mat2 = csr_matrix((data2, indices, indptr))
+
+    return eval_mat1, eval_mat2
+
+
+def build_adjoint_eval_mat(mesh, div_mat, edges):
+    mesh.enable_connectivity()
+    mesh.add_attribute("face_area")
+    faces_area = mesh.get_face_attribute("face_area")
+
+    indptr = [0]
+    indices = []
+    data1 = []
+    data2 = []
+
+    for i in range(len(edges)):
+        j1, j2 = np.sort(edges[i])
+        adjacent_faces_index = np.intersect1d(mesh.get_vertex_adjacent_faces(j1), mesh.get_vertex_adjacent_faces(j2))
+
+        if adjacent_faces_index.size == 1:
+            indptr.append(indptr[-1] + 2)
+        else:
+            indptr.append(indptr[-1] + 4)
+
+        for face_index in adjacent_faces_index:
+
+            j1_index_in_face = np.argwhere(np.sort(mesh.faces[face_index]) == j1)[0, 0]
+            j2_index_in_face = np.argwhere(np.sort(mesh.faces[face_index]) == j2)[0, 0]
+            j3_index_in_face = np.argwhere(np.logical_and(np.sort(mesh.faces[face_index]) != j1, np.sort(mesh.faces[face_index]) != j2))[0, 0]
+            j3 = np.sort(mesh.faces[face_index])[j3_index_in_face]
+
+            indices.append(3 * face_index + j1_index_in_face)
+            indices.append(3 * face_index + j2_index_in_face)
+
+            lala = div_mat[face_index, i] * (mesh.vertices[j1] - mesh.vertices[j3]) / (2 * faces_area[face_index, 0])
+
+            data1.append(lala[0])
+            data2.append(lala[1])
+
+            lala = div_mat[face_index, i] * (mesh.vertices[j2] - mesh.vertices[j3]) / (2 * faces_area[face_index, 0])
+
+            data1.append(lala[0])
+            data2.append(lala[1])
+
+    adjoint_eval_mat1 = csr_matrix((data1, indices, indptr))
+    adjoint_eval_mat2 = csr_matrix((data2, indices, indptr))
+
+    return adjoint_eval_mat1, adjoint_eval_mat2
+
+
 def project_div_constraint(x, b, div_mat):
     z, info = cg(div_mat.dot(div_mat.transpose()), b - div_mat.dot(x))
 
