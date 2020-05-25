@@ -59,3 +59,14 @@ def test_proj_piecewise_constant():
 
     assert approx(proj[0], 1/6, TOL)
     assert approx(proj[1], 1/3, TOL)
+
+
+def test_eval_vector_field():
+    vertices = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
+    faces = np.array([[0, 1, 2], [2, 0, 3]])
+    mesh = form_mesh(vertices, faces)
+
+    div_mat, edges = build_divergence_matrix(mesh)
+
+    fluxes = [0, 0, 0, 0, 1]
+    # TODO: write

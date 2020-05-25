@@ -176,3 +176,51 @@ def project_piecewise_constant(phi, mesh):
             proj[i] += quad(lambda t: np.dot(phi(edge[0] + t * (edge[1] - edge[0])), normal), 0, 1)[0]
 
     return proj
+
+
+def is_left(a, b, x):
+    return (b[0] - a[0]) * (x[1] - a[1]) - (x[0] - a[0]) * (b[1] - a[1])
+
+
+def winding(x, poly):
+    wn = 0   # the winding number counter
+
+    # repeat the first vertex at end
+    poly = np.vstack([poly, poly[0]])
+
+    # loop through all edges of the polygon
+    for i in range(poly.shape[0]-1):     # edge from V[i] to V[i+1]
+        if poly[i, 1] <= x[1]:        # start y <= P[1]
+            if poly[i+1, 1] > x[1]:     # an upward crossing
+                if is_left(poly[i], poly[i+1], x) > 0: # P left of edge
+                    wn += 1           # have a valid up intersect
+        else:                      # start y > P[1] (no test needed)
+            if poly[i+1, 1] <= x[1]:    # a downward crossing
+                if is_left(poly[i], poly[i+1], x) < 0: # P right of edge
+                    wn -= 1           # have a valid down intersect
+    return wn
+
+
+def eval_vector_field(x, mesh, div_mat, edges, fluxes):
+    face_index = -1
+    in_face = False
+
+    while face_index < mesh.num_faces - 1 and not in_face:
+        face_index += 1
+        in_face = (winding(x, mesh.vertices[mesh.faces[face_index]]) != 0)
+
+    mesh.add_attribute("face_area")
+    face_area = mesh.get_face_attribute("face_area")[face_index][0]
+
+    face_edges_index = div_mat[face_index].nonzero()[1]
+    face = mesh.faces[face_index]
+
+    res = np.zeros(2)
+
+    for j in range(3):
+        edge = edges[face_edges_index[j]]
+        opposite_vertex = np.argwhere(np.logical_and(face != edge[0], face != edge[1]))[0, 0]
+
+        res = res + div_mat[face_index, face_edges_index[j]] * fluxes[face_edges_index[j]] * (x - mesh.vertices[face[opposite_vertex]])
+
+    return res / (2 * face_area)
