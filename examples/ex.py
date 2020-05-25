@@ -17,11 +17,6 @@ tri.run()
 
 mesh = tri.mesh
 
-# triangulation = Triangulation(mesh.vertices[:, 0], mesh.vertices[:, 1], mesh.faces)
-# plt.triplot(triangulation, color='black')
-# plt.axis('equal')
-# plt.show()
-
 div_mat, edges = build_divergence_matrix(mesh)
 
 eval_mat1, eval_mat2 = build_eval_mat(mesh, div_mat, edges)
@@ -57,3 +52,14 @@ while i < max_iter and not convergence:
     i += 1
 
 print(phi)
+
+lala = np.stack([eval_mat1.dot(phi), eval_mat2.dot(phi)])
+print(np.linalg.norm(lala, axis=0))
+
+triangulation = Triangulation(mesh.vertices[:, 0], mesh.vertices[:, 1], mesh.faces)
+plt.triplot(triangulation, color='black')
+plt.axis('equal')
+
+x, y = np.meshgrid(np.linspace(0, 1, 10), np.linspace(0, 1, 10))
+
+plt.show()

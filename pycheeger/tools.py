@@ -3,6 +3,7 @@ import numpy as np
 
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import cg
+from scipy.integrate import quad
 
 from pymesh import mesh_to_graph
 
@@ -154,3 +155,24 @@ def project_div_constraint(x, b, div_mat):
         warnings.warn("problem in conjugate gradient !")
 
     return x + (div_mat.transpose()).dot(z)
+
+
+def project_piecewise_constant(phi, mesh):
+    mesh.add_attribute("face_centroid")
+    faces_centroid = mesh.get_face_attribute("face_centroid")
+
+    proj = np.zeros(mesh.num_faces)
+
+    for i in range(mesh.num_faces):
+        face = mesh.faces[i]
+
+        for j in range(3):
+            edge = np.array([mesh.vertices[face[j]], mesh.vertices[face[(j+1) % 3]]])
+            edge_center = 0.5 * (edge[0] + edge[1])
+            normal = np.array([(edge[1] - edge[0])[1], -(edge[1] - edge[0])[0]])
+            normal = normal * np.dot(edge_center - faces_centroid[i], normal)
+            normal = normal * (1 / np.linalg.norm(normal))
+
+            proj[i] += quad(lambda t: np.dot(phi(edge[0] + t * (edge[1] - edge[0])), normal), 0, 1)[0]
+
+    return proj

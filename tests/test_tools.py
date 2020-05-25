@@ -41,3 +41,21 @@ def test_divergence():
     proj_x = project_div_constraint(x, np.zeros(2), div_mat)
 
     assert np.allclose(div_mat.dot(proj_x), 0)
+
+
+def test_proj_piecewise_constant():
+    vertices = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
+    faces = np.array([[0, 1, 2], [2, 0, 3]])
+    mesh = form_mesh(vertices, faces)
+
+    phi = lambda t: np.array([t[0], 0])
+
+    proj = project_piecewise_constant(phi, mesh)
+
+    assert approx(proj[0], 1, TOL)
+    assert approx(proj[1], 1, TOL)
+
+    phi = lambda t: np.array([0, t[0] * t[1]])
+
+    assert approx(proj[0], 1/6, TOL)
+    assert approx(proj[1], 1/3, TOL)
