@@ -10,7 +10,8 @@ vertices = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
 
 tri = pymesh.triangle()
 tri.points = vertices
-tri.max_area = 0.05
+tri.max_area = 0.1
+
 tri.split_boundary = True
 tri.verbosity = 0
 tri.run()
@@ -62,7 +63,7 @@ print(np.linalg.norm(lala, axis=0))
 triangulation = Triangulation(mesh.vertices[:, 0], mesh.vertices[:, 1], mesh.faces)
 plt.triplot(triangulation, color='black')
 
-x, y = np.meshgrid(np.linspace(0.01, 0.98, 15), np.linspace(0.01, 0.98, 15))
+x, y = np.meshgrid(np.linspace(0, 1, 15), np.linspace(0, 1, 15))
 u, v = np.zeros_like(x), np.zeros_like(x)
 
 for i in range(x.shape[0]):
