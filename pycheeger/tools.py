@@ -22,30 +22,34 @@ def find_threshold(x):
     return res
 
 
-def prox_two_inf_norm(x):
-    if np.sum(np.linalg.norm(x, axis=1)) > 1:
-        thresh = find_threshold(np.linalg.norm(x, axis=1))
+def proj_one_unit_ball(x):
+    if np.sum(np.abs(x)) > 1:
+        thresh = find_threshold(np.abs(x))
         res = np.zeros_like(x, dtype='float')
 
-        for i in range(x.shape[0]):
-            if np.linalg.norm(x[i]) > thresh:
-                res[i] = (1 - thresh / np.linalg.norm(x[i])) * x[i]
+        for i in range(x.size):
+            if np.abs(x[i]) > thresh:
+                res[i] = (1 - thresh / np.abs(x[i])) * x[i]
     else:
         res = x
 
     return res
 
 
+def prox_inf_norm(x, tau):
+    return x - tau * proj_one_unit_ball(x / tau)
+
+
 def find_row_index(mat, row):
     return np.where(np.all(mat == row, axis=1))[0][0]
 
 
-def build_divergence_matrix(mesh):
+def build_grad_matrix(mesh):
     mesh.add_attribute("face_centroid")
     face_centroids = mesh.get_face_attribute("face_centroid")
     _, edges = mesh_to_graph(mesh)
 
-    indptr = [3 * i for i in range(mesh.num_faces + 1)]
+    indptr = [0]
     indices = []
     data = []
 
@@ -65,48 +69,19 @@ def build_divergence_matrix(mesh):
             edge_normal = np.array([-edge_vector[1], edge_vector[0]])
 
             if np.dot(edge_normal, edge_center - face_centroid) >= 0:
-                data.append(1)
+                data.append(-np.linalg.norm(edge_vector))
             else:
-                data.append(-1)
+                data.append(np.linalg.norm(edge_vector))
 
-    div_mat = csr_matrix((data, indices, indptr))
+    grad_mat = csr_matrix((data, indices, indptr))
 
-    return div_mat, edges
-
-
-def build_eval_mat(mesh, div_mat, edges):
-    mesh.add_attribute("face_area")
-    faces_area = mesh.get_face_attribute("face_area")
-
-    indptr = [2 * i for i in range(3 * mesh.num_faces + 1)]
-    indices = []
-    data1 = []
-    data2 = []
-
-    for i in range(mesh.num_faces):
-        face_vertices = np.sort(mesh.faces[i])
-
-        for j in range(3):
-            edge_index = find_row_index(edges, np.sort([face_vertices[j], face_vertices[(j+1)%3]]))
-            indices.append(edge_index)
-            data1.append(div_mat[i, edge_index] * (mesh.vertices[face_vertices[j]] - mesh.vertices[face_vertices[(j+2)%3]])[0] / (2 * faces_area[i, 0]))
-            data2.append(div_mat[i, edge_index] * (mesh.vertices[face_vertices[j]] - mesh.vertices[face_vertices[(j+2)%3]])[1] / (2 * faces_area[i, 0]))
-
-            edge_index = find_row_index(edges, np.sort([face_vertices[j], face_vertices[(j+2)%3]]))
-            indices.append(edge_index)
-            data1.append(div_mat[i, edge_index] * (mesh.vertices[face_vertices[j]] - mesh.vertices[face_vertices[(j+1)%3]])[0] / (2 * faces_area[i, 0]))
-            data2.append(div_mat[i, edge_index] * (mesh.vertices[face_vertices[j]] - mesh.vertices[face_vertices[(j+1)%3]])[1] / (2 * faces_area[i, 0]))
-
-    eval_mat1 = csr_matrix((data1, indices, indptr))
-    eval_mat2 = csr_matrix((data2, indices, indptr))
-
-    return eval_mat1, eval_mat2
+    return grad_mat
 
 
-def build_adjoint_eval_mat(mesh, div_mat, edges):
-    mesh.enable_connectivity()
-    mesh.add_attribute("face_area")
-    faces_area = mesh.get_face_attribute("face_area")
+def build_adjoint_grad_mat(mesh):
+    mesh.add_attribute("face_centroid")
+    face_centroids = mesh.get_face_attribute("face_centroid")
+    _, edges = mesh_to_graph(mesh)
 
     indptr = [0]
     indices = []
