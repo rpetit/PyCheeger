@@ -1,7 +1,6 @@
 import numpy as np
 
 from pytest import approx
-from pymesh import form_mesh
 from pycheeger import *
 
 
@@ -37,26 +36,8 @@ def test_proj_one_unit_ball():
 def test_grad():
     vertices = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
     faces = np.array([[0, 1, 2], [2, 0, 3]])
-    mesh = form_mesh(vertices, faces)
+    mesh = CustomMesh(vertices, faces)
 
     grad_mat = build_grad_matrix(mesh).toarray()
 
     assert np.allclose(grad_mat, np.array([[1, 0], [-np.sqrt(2), np.sqrt(2)], [0, -1], [1, 0], [0, 1]]))
-
-
-def test_proj_piecewise_constant():
-    vertices = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
-    faces = np.array([[0, 1, 2], [2, 0, 3]])
-    mesh = form_mesh(vertices, faces)
-
-    phi = lambda t: np.array([t[0], 0])
-
-    proj = project_piecewise_constant(phi, mesh)
-
-    assert approx(proj[0], 1, TOL)
-    assert approx(proj[1], 1, TOL)
-
-    phi = lambda t: np.array([0, t[0] * t[1]])
-
-    assert approx(proj[0], 1/6, TOL)
-    assert approx(proj[1], 1/3, TOL)
