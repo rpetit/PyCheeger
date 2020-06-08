@@ -63,3 +63,12 @@ class CustomMesh:
                 np.sort([face_vertices[1], face_vertices[2]]),
                 np.sort([face_vertices[0], face_vertices[2]])]
 
+    def get_face_area(self, face_index):
+        self.raw_mesh.add_attribute("face_area")
+
+        return self.raw_mesh.get_face_attribute("face_area")[face_index]
+
+    def get_face_centroid(self, face_index):
+        self.raw_mesh.add_attribute("face_centroid")
+
+        return self.raw_mesh.get_face_attribute("face_centroid")[face_index]

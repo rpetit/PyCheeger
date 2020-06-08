@@ -3,17 +3,25 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.integrate import quad
 
+from numba import jit
 
+
+@jit(nopython=True)
 def find_threshold(x):
     y = np.sort(np.abs(x))[::-1]
     j = len(y)
     stop = False
 
+    partial_sum = np.sum(y)
+
     while j >= 1 and not stop:
         j = j - 1
-        stop = (y[j] - (np.sum(y[:j+1]) - 1) / (j + 1) > 0)
+        stop = (y[j] - (partial_sum - 1) / (j + 1) > 0)
 
-    res = (np.sum(y[:j+1]) - 1) / (j + 1)
+        if not stop:
+            partial_sum -= y[j]
+
+    res = (partial_sum - 1) / (j + 1)
 
     return res
 
@@ -21,11 +29,7 @@ def find_threshold(x):
 def proj_one_unit_ball(x):
     if np.sum(np.abs(x)) > 1:
         thresh = find_threshold(np.abs(x))
-        res = np.zeros_like(x, dtype='float')
-
-        for i in range(x.size):
-            if np.abs(x[i]) > thresh:
-                res[i] = (1 - thresh / np.abs(x[i])) * x[i]
+        res = np.where(np.abs(x) > thresh, (1 - thresh / np.abs(x)) * x, 0)
     else:
         res = x
 
@@ -65,13 +69,17 @@ def project_piecewise_constant(phi, mesh):
     proj = np.zeros(mesh.num_faces)
 
     for i in range(mesh.num_faces):
-        face_edges = mesh.get_face_edges(i)
+        v1, v2, v3 = mesh.vertices[mesh.faces[i]]
 
-        for edge in face_edges:
-            v1, v2 = mesh.vertices[edge[0]], mesh.vertices[edge[1]]
-            edge_vector = v2 - v1
+        for edge in [[v1, v2], [v2, v3], [v3, v1]]:
+            edge_vector = edge[1] - edge[0]
+            edge_center = (edge[0] + edge[1]) / 2
+            face_centroid = mesh.get_face_centroid(i)
             edge_normal = np.array([-edge_vector[1], edge_vector[0]])
+            edge_normal = np.sign(np.dot(edge_center - face_centroid, edge_normal)) * edge_normal
 
-            proj[i] += quad(lambda t: np.dot(phi(v1 + t * (v2 - v1)), edge_normal), 0, 1)[0]
+            proj[i] += quad(lambda t: np.dot(phi(edge[0] + t * (edge[1] - edge[0])), edge_normal), 0, 1)[0]
+
+        proj[i] = proj[i] / mesh.get_face_area(i)
 
     return proj
