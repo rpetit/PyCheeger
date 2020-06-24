@@ -11,7 +11,7 @@ vertices = np.array([[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]])
 
 tri = pymesh.triangle()
 tri.points = vertices
-tri.max_area = 0.005
+tri.max_area = 0.01
 
 tri.split_boundary = True
 tri.verbosity = 0
@@ -26,20 +26,20 @@ adjoint_grad_mat = grad_mat.transpose()
 grad_mat_norm = np.linalg.norm(grad_mat.toarray(), ord=2)
 
 
-def custom_erf(x, mean, std):
-    return 0.5 * np.sqrt(2 * np.pi) * std * erf((x - mean) / (np.sqrt(2) * std))
+def custom_erf(x, std):
+    return np.sqrt(np.pi / 2) * std * erf(x / (np.sqrt(2) * std))
 
 
-std = 0.1
-
-
-# def psi(t):
-#     return 0.5 * np.array([np.exp(-t[0]**2 / (2 * std**2)) * custom_erf(t[1], 0, std),
-#                            np.exp(-t[1]**2 / (2 * std**2)) * custom_erf(t[0], 0, std)])
+std = 0.25
 
 
 def psi(t):
-    return np.array([t[0]**3 / 6 - 0.3 * t[0], t[1]**3 / 6])
+    return 0.5 * np.array([np.exp(-t[1]**2 / (2 * std**2)) * custom_erf(t[0], std),
+                           np.exp(-t[0]**2 / (2 * std**2)) * custom_erf(t[1], std)])
+
+
+# def psi(t):
+#     return np.array([t[0]**3 / 6 - 0.3 * t[0], t[1]**3 / 6])
 
 
 eta = project_piecewise_constant(lambda t: psi(t), mesh)
@@ -77,7 +77,7 @@ plt.show()
 print(np.linalg.norm(u - former_u) / np.linalg.norm(u))
 print(np.linalg.norm(grad_mat.dot(u), ord=1))
 
-fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(7, 21))
+fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(7, 28))
 
 triangulation = Triangulation(mesh.vertices[:, 0], mesh.vertices[:, 1], mesh.faces)
 axs[0].triplot(triangulation, color='black')
@@ -87,8 +87,17 @@ v_abs_max = np.max(np.abs(u))
 im = axs[1].tripcolor(triangulation, facecolors=eta, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
 fig.colorbar(im, ax=axs[1])
 
+x_tab = np.linspace(-1, 1)
+y_tab = np.linspace(-1, 1)
+x, y = np.meshgrid(x_tab, y_tab)
+z = np.exp(-(x**2 + y**2) / (2*std**2))
+
+axs[2].contour(x, y, z, levels=14, linewidths=0.5, colors='k')
+cntr = axs[2].contourf(x, y, z, levels=14, cmap="RdBu_r")
+fig.colorbar(cntr, ax=axs[2])
+
 v_abs_max = np.max(np.abs(u))
-im = axs[2].tripcolor(triangulation, facecolors=u, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
-fig.colorbar(im, ax=axs[2])
+im = axs[3].tripcolor(triangulation, facecolors=u, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
+fig.colorbar(im, ax=axs[3])
 
 plt.show()

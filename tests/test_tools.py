@@ -1,5 +1,3 @@
-import numpy as np
-
 from pytest import approx
 from pycheeger import *
 
@@ -9,7 +7,7 @@ TOL = 1e-10
 
 def test_find_threshold():
     for x in [[1, 2, 3, 4], [-6, 10, -15, 12]]:
-        thresh = find_threshold(x)
+        thresh = find_threshold(np.array(x))
         assert approx(np.sum(np.maximum(np.abs(x) - thresh, 0)), 1, TOL)
 
 
