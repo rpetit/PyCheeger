@@ -1,78 +1,103 @@
-import numpy as np
 import pymesh
 
 import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 
+from scipy.special import erf
+
 from pycheeger import *
 
-vertices = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
+vertices = np.array([[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]])
 
 tri = pymesh.triangle()
 tri.points = vertices
-tri.max_area = 0.1
+tri.max_area = 0.01
 
 tri.split_boundary = True
 tri.verbosity = 0
 tri.run()
 
-mesh = tri.mesh
+raw_mesh = tri.mesh
+mesh = CustomMesh(raw_mesh.vertices, raw_mesh.faces)
 
-div_mat, edges = build_divergence_matrix(mesh)
+grad_mat = build_grad_matrix(mesh)
+adjoint_grad_mat = grad_mat.transpose()
 
-eval_mat1, eval_mat2 = build_eval_mat(mesh, div_mat, edges)
-adjoint_eval_mat1, adjoint_eval_mat2 = build_adjoint_eval_mat(mesh, div_mat, edges)
+grad_mat_norm = np.linalg.norm(grad_mat.toarray(), ord=2)
 
-# f = np.random.rand(len(edges))
-# z = np.random.random((2, 3 * mesh.num_faces))
-#
-# print(np.dot(eval_mat1.dot(f), z[0, :]) + np.dot(eval_mat2.dot(f), z[1, :]))
-# print(np.dot(f, adjoint_eval_mat1.dot(z[0, :]) + adjoint_eval_mat2.dot(z[1, :])))
 
-psi = lambda t: np.array([(t[0] - 0.5)**3 / 6 - 0.5 * t[0], (t[1]-0.5)**3/6])
+def custom_erf(x, std):
+    return np.sqrt(np.pi / 2) * std * erf(x / (np.sqrt(2) * std))
 
-max_iter = 100
-sigma = 0.1
-tau = 0.1
-theta = 0.1
 
-phi = np.zeros(len(edges))
-phi_bar = phi
-z = np.zeros((2, 3 * mesh.num_faces))
+std = 0.25
 
-i = 0
-convergence = False
 
-while i < max_iter and not convergence:
-    z = prox_two_inf_norm(z + sigma * np.stack([eval_mat1.dot(phi_bar), eval_mat2.dot(phi_bar)]))
+def psi(t):
+    return 0.5 * np.array([np.exp(-t[1]**2 / (2 * std**2)) * custom_erf(t[0], std),
+                           np.exp(-t[0]**2 / (2 * std**2)) * custom_erf(t[1], std)])
 
+
+# def psi(t):
+#     return np.array([t[0]**3 / 6 - 0.3 * t[0], t[1]**3 / 6])
+
+
+eta = project_piecewise_constant(lambda t: psi(t), mesh)
+
+max_iter = 20000
+sigma = 0.99 / grad_mat_norm
+tau = 0.99 / grad_mat_norm
+theta = 1
+
+phi = np.zeros(mesh.num_edges)
+u = np.zeros(mesh.num_faces)
+former_u = u
+
+track_u = []
+track_phi = []
+
+for _ in range(max_iter):
     former_phi = phi
-    phi = project_div_constraint(phi - tau * (adjoint_eval_mat1.dot(z[0, :]) + adjoint_eval_mat2.dot(z[1, :])),
-                                 project_piecewise_constant(psi, mesh), div_mat)
+    phi = prox_inf_norm(phi + sigma * grad_mat.dot(2 * u - former_u), sigma)
 
-    phi_bar = phi + theta * (phi - former_phi)
+    track_phi.append(np.linalg.norm(phi - former_phi))
 
-    convergence = False
-    i += 1
+    former_u = u
+    u = prox_dot_prod(u - tau * adjoint_grad_mat.dot(phi), tau, eta)
 
-print(phi)
+    track_u.append(np.linalg.norm(u - former_u))
 
-lala = np.stack([eval_mat1.dot(phi), eval_mat2.dot(phi)])
-print(np.linalg.norm(lala, axis=0))
+fig, axs = plt.subplots(nrows=1, ncols=2)
+
+axs[0].plot(track_u)
+axs[1].plot(track_phi)
+
+plt.show()
+
+print(np.linalg.norm(u - former_u) / np.linalg.norm(u))
+print(np.linalg.norm(grad_mat.dot(u), ord=1))
+
+fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(7, 28))
 
 triangulation = Triangulation(mesh.vertices[:, 0], mesh.vertices[:, 1], mesh.faces)
-plt.triplot(triangulation, color='black')
+axs[0].triplot(triangulation, color='black')
+axs[0].axis('off')
 
-x, y = np.meshgrid(np.linspace(0, 1, 15), np.linspace(0, 1, 15))
-u, v = np.zeros_like(x), np.zeros_like(x)
+v_abs_max = np.max(np.abs(u))
+im = axs[1].tripcolor(triangulation, facecolors=eta, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
+fig.colorbar(im, ax=axs[1])
 
-for i in range(x.shape[0]):
-    for j in range(x.shape[1]):
-        vec = eval_vector_field(np.array([x[i, j], y[i, j]]), mesh, div_mat, edges, phi)
-        u[i, j] = vec[0]
-        v[i, j] = vec[1]
+x_tab = np.linspace(-1, 1)
+y_tab = np.linspace(-1, 1)
+x, y = np.meshgrid(x_tab, y_tab)
+z = np.exp(-(x**2 + y**2) / (2*std**2))
 
-plt.quiver(x, y, u, v, color='red')
+axs[2].contour(x, y, z, levels=14, linewidths=0.5, colors='k')
+cntr = axs[2].contourf(x, y, z, levels=14, cmap="RdBu_r")
+fig.colorbar(cntr, ax=axs[2])
 
-plt.axis('equal')
+v_abs_max = np.max(np.abs(u))
+im = axs[3].tripcolor(triangulation, facecolors=u, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
+fig.colorbar(im, ax=axs[3])
+
 plt.show()
