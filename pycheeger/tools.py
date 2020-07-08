@@ -1,9 +1,10 @@
 import numpy as np
-
-from scipy.sparse import csr_matrix
-from scipy.integrate import quad
+import quadpy
 
 from numba import jit
+
+import matplotlib.pyplot as plt
+from matplotlib.tri import Triangulation
 
 
 @jit(nopython=True)
@@ -44,42 +45,81 @@ def prox_dot_prod(x, tau, eta):
     return x - tau * eta
 
 
-def build_grad_matrix(mesh):
-    indptr = [0]
-    indices = []
-    data = []
+def integrate_on_triangle(eta, vertices):
+    scheme = quadpy.triangle.xiao_gimbutas_09()
+    val = scheme.integrate(eta, vertices)
 
-    for i in range(mesh.num_edges):
-        edge = mesh.edges[i]
-        edge_length = mesh.get_edge_length(edge)
-        edge_adjacent_faces = mesh.get_edge_adjacent_faces(edge)
-
-        indptr.append(indptr[-1] + len(edge_adjacent_faces))
-
-        for face_index in edge_adjacent_faces:
-            indices.append(face_index)
-            data.append(-mesh.get_orientation(face_index, edge) * edge_length)
-
-    grad_mat = csr_matrix((data, indices, indptr))
-
-    return grad_mat
+    return val
 
 
-def project_piecewise_constant(phi, mesh):
-    proj = np.zeros(mesh.num_faces)
+# TODO: clean up
+def postprocess_indicator(x, grad_mat):
+    res = np.zeros_like(x)
+    _, bins = np.histogram(x, bins=2)
+    i1 = np.where(x < bins[1])
+    i2 = np.where(x > bins[1])
+    mean1 = np.mean(x[i1])
+    mean2 = np.mean(x[i2])
 
-    for i in range(mesh.num_faces):
-        v1, v2, v3 = mesh.vertices[mesh.faces[i]]
+    if abs(mean1) < abs(mean2):
+        res[i1] = 0
+        res[i2] = mean2
+    else:
+        res[i2] = 0
+        res[i1] = mean1
 
-        for edge in [[v1, v2], [v2, v3], [v3, v1]]:
-            edge_vector = edge[1] - edge[0]
-            edge_center = (edge[0] + edge[1]) / 2
-            face_centroid = mesh.get_face_centroid(i)
-            edge_normal = np.array([-edge_vector[1], edge_vector[0]])
-            edge_normal = np.sign(np.dot(edge_center - face_centroid, edge_normal)) * edge_normal
+    return res / np.linalg.norm(grad_mat.dot(x), ord=1)
 
-            proj[i] += quad(lambda t: np.dot(phi(edge[0] + t * (edge[1] - edge[0])), edge_normal), 0, 1)[0]
 
-        proj[i] = proj[i] / mesh.get_face_area(i)
+def run_primal_dual(mesh, eta, max_iter, grad_mat_norm):
+    sigma = 0.99 / grad_mat_norm
+    tau = 0.99 / grad_mat_norm
+    theta = 1
 
-    return proj
+    phi = np.zeros(mesh.num_edges)
+    u = np.zeros(mesh.num_faces)
+    former_u = u
+
+    track_u = []
+    track_phi = []
+
+    for _ in range(max_iter):
+        former_phi = phi
+        phi = prox_inf_norm(phi + sigma * mesh.grad_mat.dot(2 * u - former_u), sigma)
+
+        track_phi.append(np.linalg.norm(phi - former_phi))
+
+        former_u = u
+        u = prox_dot_prod(u - tau * mesh.grad_mat.T.dot(phi), tau, eta)
+
+        track_u.append(np.linalg.norm(u - former_u))
+
+    print(np.linalg.norm(u - former_u) / np.linalg.norm(u))
+    print(np.linalg.norm(mesh.grad_mat.dot(u), ord=1))
+
+    return postprocess_indicator(u, mesh.grad_mat)
+
+
+def plot_results(mesh, u, eta_bar, std):
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(7, 14))
+
+    triangulation = Triangulation(mesh.vertices[:, 0], mesh.vertices[:, 1], mesh.faces)
+
+    x_tab = np.linspace(-1, 1)
+    y_tab = np.linspace(-1, 1)
+    x, y = np.meshgrid(x_tab, y_tab)
+    z = np.exp(-(x ** 2 + y ** 2) / (2 * std ** 2))
+
+    eta_avg = eta_bar / np.array([mesh.get_face_area(face_index) for face_index in range(mesh.num_faces)])
+
+    v_abs_max = max(np.max(np.abs(u)), np.max(np.abs(z)), np.max(np.abs(eta_avg)))
+
+    axs[0].triplot(triangulation, color='black', alpha=0.1)
+    im = axs[0].tripcolor(triangulation, facecolors=eta_avg, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
+    fig.colorbar(im, ax=axs[0])
+
+    axs[1].triplot(triangulation, color='black', alpha=0.1)
+    im = axs[1].tripcolor(triangulation, facecolors=u, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
+    fig.colorbar(im, ax=axs[1])
+
+    plt.show()

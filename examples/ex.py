@@ -1,103 +1,51 @@
 import pymesh
 
-import matplotlib.pyplot as plt
-from matplotlib.tri import Triangulation
-
-from scipy.special import erf
-
 from pycheeger import *
 
 vertices = np.array([[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]])
 
 tri = pymesh.triangle()
 tri.points = vertices
-tri.max_area = 0.01
+tri.max_area = 0.005
 
 tri.split_boundary = True
 tri.verbosity = 0
 tri.run()
 
 raw_mesh = tri.mesh
+
 mesh = CustomMesh(raw_mesh.vertices, raw_mesh.faces)
 
-grad_mat = build_grad_matrix(mesh)
-adjoint_grad_mat = grad_mat.transpose()
-
-grad_mat_norm = np.linalg.norm(grad_mat.toarray(), ord=2)
-
-
-def custom_erf(x, std):
-    return np.sqrt(np.pi / 2) * std * erf(x / (np.sqrt(2) * std))
-
-
 std = 0.25
+coeffs = np.array([0.3, 0.4, -0.3])
+means = np.array([[0.0, 0.0], [-0.5, -0.2], [0.1, 0.2]])
 
 
-def psi(t):
-    return 0.5 * np.array([np.exp(-t[1]**2 / (2 * std**2)) * custom_erf(t[0], std),
-                           np.exp(-t[0]**2 / (2 * std**2)) * custom_erf(t[1], std)])
+@jit(nopython=True)
+def eta(x):
+    res = coeffs[0] * np.exp(-((x[0] - means[0, 0])**2 + (x[1] - means[0, 1])**2) / (2 * std**2))
+
+    for i in range(1, len(coeffs)):
+        res += coeffs[i] * np.exp(-((x[0] - means[i, 0])**2 + (x[1] - means[i, 1])**2) / (2 * std**2))
+
+    return res
 
 
-# def psi(t):
-#     return np.array([t[0]**3 / 6 - 0.3 * t[0], t[1]**3 / 6])
+eta_bar = mesh.integrate(eta)
 
+mesh.build_grad_matrix()
+grad_mat_norm = np.linalg.norm(mesh.grad_mat.toarray(), ord=2)
 
-eta = project_piecewise_constant(lambda t: psi(t), mesh)
+max_iter = 35000
 
-max_iter = 20000
-sigma = 0.99 / grad_mat_norm
-tau = 0.99 / grad_mat_norm
-theta = 1
+u = run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm)
+plot_results(mesh, u, eta_bar, std)
 
-phi = np.zeros(mesh.num_edges)
-u = np.zeros(mesh.num_faces)
-former_u = u
+for i in range(5):
+    mesh.refine(u)
+    eta_bar = mesh.integrate(eta)
 
-track_u = []
-track_phi = []
+    grad_mat_norm = np.linalg.norm(mesh.grad_mat.toarray(), ord=2)
 
-for _ in range(max_iter):
-    former_phi = phi
-    phi = prox_inf_norm(phi + sigma * grad_mat.dot(2 * u - former_u), sigma)
-
-    track_phi.append(np.linalg.norm(phi - former_phi))
-
-    former_u = u
-    u = prox_dot_prod(u - tau * adjoint_grad_mat.dot(phi), tau, eta)
-
-    track_u.append(np.linalg.norm(u - former_u))
-
-fig, axs = plt.subplots(nrows=1, ncols=2)
-
-axs[0].plot(track_u)
-axs[1].plot(track_phi)
-
-plt.show()
-
-print(np.linalg.norm(u - former_u) / np.linalg.norm(u))
-print(np.linalg.norm(grad_mat.dot(u), ord=1))
-
-fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(7, 28))
-
-triangulation = Triangulation(mesh.vertices[:, 0], mesh.vertices[:, 1], mesh.faces)
-axs[0].triplot(triangulation, color='black')
-axs[0].axis('off')
-
-v_abs_max = np.max(np.abs(u))
-im = axs[1].tripcolor(triangulation, facecolors=eta, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
-fig.colorbar(im, ax=axs[1])
-
-x_tab = np.linspace(-1, 1)
-y_tab = np.linspace(-1, 1)
-x, y = np.meshgrid(x_tab, y_tab)
-z = np.exp(-(x**2 + y**2) / (2*std**2))
-
-axs[2].contour(x, y, z, levels=14, linewidths=0.5, colors='k')
-cntr = axs[2].contourf(x, y, z, levels=14, cmap="RdBu_r")
-fig.colorbar(cntr, ax=axs[2])
-
-v_abs_max = np.max(np.abs(u))
-im = axs[3].tripcolor(triangulation, facecolors=u, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
-fig.colorbar(im, ax=axs[3])
-
-plt.show()
+    u = run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm)
+    plot_results(mesh, u, eta_bar, std)
