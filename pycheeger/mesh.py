@@ -1,4 +1,5 @@
 import numpy as np
+import quadpy
 
 from scipy.sparse import csr_matrix, vstack, hstack, eye
 from scipy.optimize import linprog
@@ -153,15 +154,80 @@ class CustomMesh:
         mask[faces_to_remove] = False
         new_faces = np.append(self.faces[mask], faces_to_add, axis=0)
 
-        self.faces = new_faces
-        self.vertices = new_vertices
-        self.raw_mesh = form_mesh(self.vertices, self.faces)
+        self.__init__(new_vertices, new_faces)
+        self.build_grad_matrix()
 
-        _, edges = mesh_to_graph(self.raw_mesh)
-        self.edges = edges
+    def find_path(self, edges_index):
+        edges = self.edges[edges_index]
+        path_vertices = [edges[0, 0], edges[0, 1]]
+        path_edges = [edges_index[0]]
 
-        self.num_edges = len(edges)
-        self.num_faces = len(new_faces)
-        self.num_vertices = len(new_vertices)
+        mask = np.ones(len(edges), dtype=bool)
+        mask[0] = False
 
+        for i in range(len(edges) - 1):
+            prev_vertex = path_vertices[-1]
+            where_next = np.where(edges[mask] == prev_vertex)
+            i, j = where_next[0][0], where_next[1][0]
+
+            next_vertex = edges[mask][i, 1 - j]
+            next_edge = edges_index[mask][i]
+
+            path_vertices.append(next_vertex)
+            path_edges.append(next_edge)
+
+            mask[np.where(edges_index == next_edge)] = False
+
+        return path_vertices[:-1], path_edges
+
+    def move_vertices(self, u, eta, eta_bar):
+        grad_edges = np.where(np.abs(self.grad_mat.dot(u)) > 0)[0]
+        path_vertices, path_edges = self.find_path(grad_edges)
+
+        scheme = quadpy.line_segment.gauss_patterson(5)
+        vals = np.zeros((len(path_edges), 2))
+        normals = np.zeros((len(path_edges), 2))
+
+        perim = 0
+
+        for i in range(len(path_edges)):
+            edge_index = path_edges[i]
+
+            i1, i2 = self.edges[edge_index]
+            v1, v2 = self.vertices[i1], self.vertices[i2]
+
+            vals[i, 0] = scheme.integrate(lambda t: eta(np.outer(v1, 1-t) + np.outer(v2, t)) * t,
+                                          [0.0, 1.0])
+            vals[i, 1] = scheme.integrate(lambda t: eta(np.outer(v1, 1-t) + np.outer(v2, t)) * (1-t),
+                                          [0.0, 1.0])
+
+            # TODO: deal with domain boundaries
+            adjacent_faces = self.get_edge_adjacent_faces(self.edges[edge_index])
+            assert (u[adjacent_faces[0]] == 0 and u[adjacent_faces[1]] != 0) or (u[adjacent_faces[1]] == 0 and u[adjacent_faces[0]] != 0)
+
+            edge_vector = v2 - v1
+            perim += np.linalg.norm(edge_vector)
+            edge_normal = np.array([-edge_vector[1], edge_vector[0]])
+            c0 = self.get_face_centroid(adjacent_faces[0])
+            c1 = self.get_face_centroid(adjacent_faces[1])
+
+            if u[adjacent_faces[0]] == 0:
+                edge_normal = edge_normal * np.sign(np.dot(edge_normal, c0 - c1))
+            else:
+                edge_normal = edge_normal * np.sign(np.dot(edge_normal, c1 - c0))
+
+            normals[i] = edge_normal
+
+        new_vertices = self.vertices.copy()
+
+        for i in range(len(path_vertices)):
+            e1 = self.vertices[path_vertices[i-1]] - self.vertices[path_vertices[i]]
+            e2 = self.vertices[path_vertices[(i+1)%len(path_vertices)]] - self.vertices[path_vertices[i]]
+            deriv_perim = (e1 / np.linalg.norm(e1) + e2 / np.linalg.norm(e2))
+            deriv_area = (vals[i-1, 1] * normals[i-1] + vals[i, 0] * normals[i])
+            area = np.dot(u, eta_bar)
+            deriv = (deriv_perim * area - perim * deriv_area) / area ** 2
+            new_vertices[path_vertices[i]] = new_vertices[path_vertices[i]] + 2e-4 * np.sign(area) * deriv
+
+        self.__init__(new_vertices, self.faces)
         self.build_grad_matrix()

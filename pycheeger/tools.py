@@ -74,7 +74,6 @@ def postprocess_indicator(x, grad_mat):
 def run_primal_dual(mesh, eta, max_iter, grad_mat_norm):
     sigma = 0.99 / grad_mat_norm
     tau = 0.99 / grad_mat_norm
-    theta = 1
 
     phi = np.zeros(mesh.num_edges)
     u = np.zeros(mesh.num_faces)
@@ -115,10 +114,12 @@ def plot_results(mesh, u, eta_bar, std):
     v_abs_max = max(np.max(np.abs(u)), np.max(np.abs(z)), np.max(np.abs(eta_avg)))
 
     axs[0].triplot(triangulation, color='black', alpha=0.1)
+    axs[0].axis('equal')
     im = axs[0].tripcolor(triangulation, facecolors=eta_avg, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     fig.colorbar(im, ax=axs[0])
 
     axs[1].triplot(triangulation, color='black', alpha=0.1)
+    axs[1].axis('equal')
     im = axs[1].tripcolor(triangulation, facecolors=u, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     fig.colorbar(im, ax=axs[1])
 
