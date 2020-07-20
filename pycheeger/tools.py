@@ -117,8 +117,8 @@ def run_primal_dual(mesh, eta, max_iter, grad_mat_norm, verbose=True):
 
 
 def plot_curve(curve, eta):
-    x = np.arange(-1.0, 1.0, 0.05)
-    y = np.arange(-1.0, 1.0, 0.05)
+    x = np.arange(-1.0, 1.0, 0.01)
+    y = np.arange(-1.0, 1.0, 0.01)
     x_grid, y_grid = np.meshgrid(x, y)
     z_grid = np.zeros_like(x_grid)
 
@@ -133,7 +133,7 @@ def plot_curve(curve, eta):
 
     v_abs_max = np.max(np.abs(z_grid))
 
-    im = ax.contourf(x_grid, y_grid, z_grid, levels=20, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
+    im = ax.contourf(x_grid, y_grid, z_grid, levels=30, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     ax.plot(x_curve, y_curve, color='black')
 
     fig.colorbar(im, ax=ax)

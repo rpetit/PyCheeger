@@ -80,7 +80,7 @@ class SimpleClosedCurve:
         perimeter_gradient = self.compute_perimeter_gradient()
         area_gradient = self.compute_weighted_area_gradient(eta)
 
-        gradient = (perimeter_gradient * area - area_gradient * perimeter) / area ** 2
+        gradient = np.sign(area) * (perimeter_gradient * area - area_gradient * perimeter) / area ** 2
         new_vertices = self.vertices - step_size * gradient
 
         new_inner_mesh_vertices = self.inner_mesh.vertices.copy()

@@ -4,26 +4,27 @@ import pymesh
 from pycheeger import *
 
 vertices = np.array([[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]])
-raw_mesh = triangulate(vertices, max_area=0.005)
+raw_mesh = triangulate(vertices, max_area=0.0025)
 mesh = CustomMesh(raw_mesh.vertices, raw_mesh.faces)
 
-std = 0.3
-coeffs = np.array([0.9, 1.0, -1.1])
-means = np.array([[-0.1, -0.3], [0.0, 0.6], [0.15, 0.2]])
+std = 0.2
+coeffs = 0.5 * np.array([0.9, 1.0, -1.1])
+means = np.array([[-0.1, -0.4], [0.0, 0.5], [0.15, 0.1]])
 # coeffs = np.array([1.0])
 # means = np.array([[0.0, 0.0]])
 
 
 def eta(x):
     if x.ndim == 1:
-        axis = None
+        res = coeffs[0] * np.exp(-np.linalg.norm(x - means[0]) ** 2 / (2 * std ** 2))
+
+        for i in range(1, len(coeffs)):
+            res += coeffs[i] * np.exp(-np.linalg.norm(x - means[i]) ** 2 / (2 * std ** 2))
     else:
-        axis = 0
+        res = coeffs[0] * np.exp(-np.linalg.norm(x - means[0, :, np.newaxis], axis=0) ** 2 / (2 * std**2))
 
-    res = coeffs[0] * np.exp(-np.linalg.norm(x - means[0, :, np.newaxis], axis=axis) ** 2 / (2 * std**2))
-
-    for i in range(1, len(coeffs)):
-        res += coeffs[i] * np.exp(-np.linalg.norm(x - means[i, :, np.newaxis], axis=axis) ** 2 / (2 * std**2))
+        for i in range(1, len(coeffs)):
+            res += coeffs[i] * np.exp(-np.linalg.norm(x - means[i, :, np.newaxis], axis=0) ** 2 / (2 * std**2))
 
     return res
 
@@ -43,9 +44,9 @@ boundary_vertices = mesh.vertices[boundary_vertices_index]
 inner_mesh = pymesh.submesh(mesh.raw_mesh, np.where(np.abs(u) > 0)[0], 0)
 
 curve = SimpleClosedCurve(boundary_vertices, inner_mesh)
-step_size = 1e-3
+step_size = 1e-4
 
-for _ in range(100):
+for _ in range(150):
     curve.perform_gradient_step(eta, step_size)
 
 print(np.min(np.linalg.norm(curve.vertices, axis=0)))
