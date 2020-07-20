@@ -1,10 +1,26 @@
 import numpy as np
 import quadpy
 
-from numba import jit
-
 import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
+
+from numba import jit
+from pymesh import triangle
+
+
+def triangulate(vertices, max_area=0.005):
+    tri = triangle()
+    tri.points = vertices
+
+    tri.max_area = max_area
+
+    tri.split_boundary = True
+    tri.verbosity = 0
+    tri.run()
+
+    raw_mesh = tri.mesh
+
+    return raw_mesh
 
 
 @jit(nopython=True)
@@ -46,13 +62,13 @@ def prox_dot_prod(x, tau, eta):
 
 
 def integrate_on_triangle(eta, vertices):
+    # TODO: add scheme options
     scheme = quadpy.triangle.xiao_gimbutas_09()
     val = scheme.integrate(eta, vertices)
 
     return val
 
 
-# TODO: clean up
 def postprocess_indicator(x, grad_mat):
     res = np.zeros_like(x)
     _, bins = np.histogram(x, bins=2)
@@ -68,10 +84,10 @@ def postprocess_indicator(x, grad_mat):
         res[i2] = 0
         res[i1] = mean1
 
-    return res / np.linalg.norm(grad_mat.dot(x), ord=1)
+    return res / np.linalg.norm(grad_mat.dot(res), ord=1)
 
 
-def run_primal_dual(mesh, eta, max_iter, grad_mat_norm):
+def run_primal_dual(mesh, eta, max_iter, grad_mat_norm, verbose=True):
     sigma = 0.99 / grad_mat_norm
     tau = 0.99 / grad_mat_norm
 
@@ -93,25 +109,47 @@ def run_primal_dual(mesh, eta, max_iter, grad_mat_norm):
 
         track_u.append(np.linalg.norm(u - former_u))
 
-    print(np.linalg.norm(u - former_u) / np.linalg.norm(u))
-    print(np.linalg.norm(mesh.grad_mat.dot(u), ord=1))
+    if verbose:
+        print(np.linalg.norm(u - former_u) / np.linalg.norm(u))
+        print(np.linalg.norm(mesh.grad_mat.dot(u), ord=1))
 
     return postprocess_indicator(u, mesh.grad_mat)
 
 
-def plot_results(mesh, u, eta_bar, std):
+def plot_curve(curve, eta):
+    x = np.arange(-1.0, 1.0, 0.05)
+    y = np.arange(-1.0, 1.0, 0.05)
+    x_grid, y_grid = np.meshgrid(x, y)
+    z_grid = np.zeros_like(x_grid)
+
+    for i in range(x_grid.shape[0]):
+        for j in range(x_grid.shape[1]):
+            z_grid[i, j] = eta(np.array([x_grid[i, j], y_grid[i, j]]))
+
+    x_curve = np.append(curve.vertices[:, 0], curve.vertices[0, 0])
+    y_curve = np.append(curve.vertices[:, 1], curve.vertices[0, 1])
+
+    fig, ax = plt.subplots()
+
+    v_abs_max = np.max(np.abs(z_grid))
+
+    im = ax.contourf(x_grid, y_grid, z_grid, levels=20, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
+    ax.plot(x_curve, y_curve, color='black')
+
+    fig.colorbar(im, ax=ax)
+    ax.axis('equal')
+
+    plt.show()
+
+
+def plot_results(mesh, u, eta_bar):
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(7, 14))
 
     triangulation = Triangulation(mesh.vertices[:, 0], mesh.vertices[:, 1], mesh.faces)
 
-    x_tab = np.linspace(-1, 1)
-    y_tab = np.linspace(-1, 1)
-    x, y = np.meshgrid(x_tab, y_tab)
-    z = np.exp(-(x ** 2 + y ** 2) / (2 * std ** 2))
-
     eta_avg = eta_bar / np.array([mesh.get_face_area(face_index) for face_index in range(mesh.num_faces)])
 
-    v_abs_max = max(np.max(np.abs(u)), np.max(np.abs(z)), np.max(np.abs(eta_avg)))
+    v_abs_max = max(np.max(np.abs(u)), np.max(np.abs(eta_avg)))
 
     axs[0].triplot(triangulation, color='black', alpha=0.1)
     axs[0].axis('equal')
