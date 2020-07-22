@@ -116,7 +116,7 @@ def run_primal_dual(mesh, eta, max_iter, grad_mat_norm, verbose=True):
     return postprocess_indicator(u, mesh.grad_mat)
 
 
-def plot_curve(curve, eta):
+def plot_set_boundary(simple_set, eta):
     x = np.arange(-1.0, 1.0, 0.01)
     y = np.arange(-1.0, 1.0, 0.01)
     x_grid, y_grid = np.meshgrid(x, y)
@@ -126,8 +126,8 @@ def plot_curve(curve, eta):
         for j in range(x_grid.shape[1]):
             z_grid[i, j] = eta(np.array([x_grid[i, j], y_grid[i, j]]))
 
-    x_curve = np.append(curve.vertices[:, 0], curve.vertices[0, 0])
-    y_curve = np.append(curve.vertices[:, 1], curve.vertices[0, 1])
+    x_curve = np.append(simple_set.boundary_vertices[:, 0], simple_set.boundary_vertices[0, 0])
+    y_curve = np.append(simple_set.boundary_vertices[:, 1], simple_set.boundary_vertices[0, 1])
 
     fig, ax = plt.subplots()
 

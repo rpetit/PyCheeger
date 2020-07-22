@@ -8,10 +8,8 @@ raw_mesh = triangulate(vertices, max_area=0.0025)
 mesh = CustomMesh(raw_mesh.vertices, raw_mesh.faces)
 
 std = 0.2
-coeffs = 0.5 * np.array([0.9, 1.0, -1.1])
-means = np.array([[-0.1, -0.4], [0.0, 0.5], [0.15, 0.1]])
-# coeffs = np.array([1.0])
-# means = np.array([[0.0, 0.0]])
+coeffs = 0.5 * np.array([0.9, 1.0, -1.1, -0.7])
+means = np.array([[-0.1, -0.3], [0.0, 0.4], [0.1, 0.0], [-0.6, -0.5]])
 
 
 def eta(x):
@@ -34,23 +32,19 @@ eta_bar = mesh.integrate(eta)
 mesh.build_grad_matrix()
 grad_mat_norm = np.linalg.norm(mesh.grad_mat.toarray(), ord=2)
 
-max_iter = 30000
+max_iter = 10000
 
 u = run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm)
 plot_results(mesh, u, eta_bar)
 
 boundary_vertices_index, _ = mesh.find_path(np.where(np.abs(mesh.grad_mat.dot(u)) > 0)[0])
 boundary_vertices = mesh.vertices[boundary_vertices_index]
-inner_mesh = pymesh.submesh(mesh.raw_mesh, np.where(np.abs(u) > 0)[0], 0)
+mesh = pymesh.submesh(mesh.raw_mesh, np.where(np.abs(u) > 0)[0], 0)
 
-curve = SimpleClosedCurve(boundary_vertices, inner_mesh)
-step_size = 1e-4
+simple_set = SimpleSet(boundary_vertices, mesh)
 
-for _ in range(150):
-    curve.perform_gradient_step(eta, step_size)
+step_size = 1e-5
+n_iter = 200
+simple_set.perform_gradient_descent(eta, step_size, n_iter)
 
-print(np.min(np.linalg.norm(curve.vertices, axis=0)))
-print(np.max(np.linalg.norm(curve.vertices, axis=0)))
-
-plot_curve(curve, eta)
-
+plot_set_boundary(simple_set, eta)
