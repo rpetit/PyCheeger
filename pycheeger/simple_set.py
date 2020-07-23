@@ -3,7 +3,7 @@ import quadpy
 
 from pymesh import form_mesh
 
-from .tools import integrate_on_triangle, triangulate
+from .tools import integrate_on_triangle, triangulate, proj_unit_square
 
 
 class SimpleSet:
@@ -77,37 +77,52 @@ class SimpleSet:
         return gradient
 
     # TODO: implement line search
-    def perform_gradient_descent(self, eta, step_size, n_iter):
-        for _ in range(n_iter):
+    def perform_gradient_descent(self, eta, step_size, max_iter, eps_stop):
+        obj_tab = []
+        grad_norm_tab = []
+
+        convergence = False
+        n_iter = 0
+
+        while not convergence and n_iter < max_iter:
             perimeter = self.perimeter
             area = self.compute_weighted_area(eta)
+
+            obj = perimeter / np.abs(area)
+            obj_tab.append(obj)
 
             perimeter_gradient = self.compute_perimeter_gradient()
             area_gradient = self.compute_weighted_area_gradient(eta)
 
             gradient = np.sign(area) * (perimeter_gradient * area - area_gradient * perimeter) / area ** 2
 
-            # alpha = 0.1
-            # beta = 0.5
+            grad_norm_tab.append(np.linalg.norm(gradient))
+
+            alpha = 0.1
+            beta = 0.5
             t = step_size
 
             ag_condition = False
 
             while not ag_condition:
-                new_boundary_vertices = self.boundary_vertices - t * gradient
+                new_boundary_vertices = proj_unit_square(self.boundary_vertices - t * gradient)
 
                 new_mesh_vertices = self.mesh.vertices.copy()
                 new_mesh_vertices[self.boundary_indices] = new_boundary_vertices
 
                 new_mesh = form_mesh(new_mesh_vertices, self.mesh.faces)
 
-                # new_curve = SimpleClosedCurve(new_vertices, new_inner_mesh)
-                # new_area = new_curve.compute_weighted_area(eta)
-                # new_perimeter = new_curve.perimeter
-                # new_obj = new_perimeter / np.abs(new_area)
+                new_curve = SimpleSet(new_boundary_vertices, new_mesh)
+                new_area = new_curve.compute_weighted_area(eta)
+                new_perimeter = new_curve.perimeter
+                new_obj = new_perimeter / np.abs(new_area)
 
-                # ag_condition = (new_obj <= obj - alpha * t * np.linalg.norm(gradient) ** 2)
-                ag_condition = True
-                # t = beta * t
+                ag_condition = (new_obj <= obj - alpha * t * np.linalg.norm(gradient) ** 2)
+                t = beta * t
 
+            convergence = np.linalg.norm(new_boundary_vertices - self.boundary_vertices) <= eps_stop
             self.__init__(new_boundary_vertices, new_mesh)
+
+            n_iter += 1
+
+        return obj_tab, grad_norm_tab

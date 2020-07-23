@@ -53,6 +53,14 @@ def proj_one_unit_ball(x):
     return res
 
 
+def proj_unit_square(x):
+    res = x.copy()
+    res[np.where(res > 1)] = 1
+    res[np.where(res < -1)] = -1
+
+    return res
+
+
 def prox_inf_norm(x, tau):
     return x - tau * proj_one_unit_ball(x / tau)
 
