@@ -3,7 +3,7 @@ import quadpy
 
 from pymesh import form_mesh
 
-from .tools import integrate_on_triangle, triangulate, proj_unit_square
+from .tools import integrate_on_triangle, triangulate, proj_unit_square, plot_set_boundary
 
 
 class SimpleSet:
@@ -120,9 +120,14 @@ class SimpleSet:
                 ag_condition = (new_obj <= obj - alpha * t * np.linalg.norm(gradient) ** 2)
                 t = beta * t
 
-            convergence = (np.linalg.norm(new_boundary_vertices - self.boundary_vertices) / np.linalg.norm(self.boundary_vertices)) <= eps_stop
-            self.__init__(new_boundary_vertices, new_mesh)
-
             n_iter += 1
+            convergence = (np.linalg.norm(new_boundary_vertices - self.boundary_vertices) / np.linalg.norm(self.boundary_vertices)) <= eps_stop
+
+            if n_iter % 100 == 0:
+                self.boundary_vertices = new_boundary_vertices
+                self.remesh(0.005)
+                plot_set_boundary(self, eta)
+            else:
+                self.__init__(new_boundary_vertices, new_mesh)
 
         return obj_tab, grad_norm_tab

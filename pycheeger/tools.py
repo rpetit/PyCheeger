@@ -12,6 +12,8 @@ def triangulate(vertices, max_area=0.005):
     tri = triangle()
     tri.points = vertices
 
+    tri.segments = np.array([[i, (i+1) % len(vertices)] for i in range(len(vertices))])
+
     tri.max_area = max_area
 
     tri.split_boundary = True
@@ -129,12 +131,17 @@ def plot_set_boundary(simple_set, eta):
     x_curve = np.append(simple_set.boundary_vertices[:, 0], simple_set.boundary_vertices[0, 0])
     y_curve = np.append(simple_set.boundary_vertices[:, 1], simple_set.boundary_vertices[0, 1])
 
-    fig, ax = plt.subplots()
+    triangulation = Triangulation(simple_set.mesh.vertices[:, 0],
+                                  simple_set.mesh.vertices[:, 1],
+                                  simple_set.mesh.faces)
+
+    fig, ax = plt.subplots(figsize=(7, 7))
 
     v_abs_max = np.max(np.abs(z_grid))
 
     im = ax.contourf(x_grid, y_grid, z_grid, levels=30, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     ax.plot(x_curve, y_curve, color='black')
+    ax.triplot(triangulation, color='black', alpha=0.3)
 
     fig.colorbar(im, ax=ax)
     ax.axis('equal')
