@@ -120,7 +120,7 @@ class SimpleSet:
                 ag_condition = (new_obj <= obj - alpha * t * np.linalg.norm(gradient) ** 2)
                 t = beta * t
 
-            convergence = np.linalg.norm(new_boundary_vertices - self.boundary_vertices) <= eps_stop
+            convergence = (np.linalg.norm(new_boundary_vertices - self.boundary_vertices) / np.linalg.norm(self.boundary_vertices)) <= eps_stop
             self.__init__(new_boundary_vertices, new_mesh)
 
             n_iter += 1

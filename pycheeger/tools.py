@@ -4,7 +4,7 @@ import quadpy
 import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 
-from numba import jit
+from numba import njit
 from pymesh import triangle
 
 
@@ -23,7 +23,7 @@ def triangulate(vertices, max_area=0.005):
     return raw_mesh
 
 
-@jit(nopython=True)
+@njit
 def find_threshold(x):
     y = np.sort(np.abs(x))[::-1]
     j = len(y)
@@ -103,19 +103,11 @@ def run_primal_dual(mesh, eta, max_iter, grad_mat_norm, verbose=True):
     u = np.zeros(mesh.num_faces)
     former_u = u
 
-    track_u = []
-    track_phi = []
-
     for _ in range(max_iter):
-        former_phi = phi
         phi = prox_inf_norm(phi + sigma * mesh.grad_mat.dot(2 * u - former_u), sigma)
-
-        track_phi.append(np.linalg.norm(phi - former_phi))
 
         former_u = u
         u = prox_dot_prod(u - tau * mesh.grad_mat.T.dot(phi), tau, eta)
-
-        track_u.append(np.linalg.norm(u - former_u))
 
     if verbose:
         print(np.linalg.norm(u - former_u) / np.linalg.norm(u))
