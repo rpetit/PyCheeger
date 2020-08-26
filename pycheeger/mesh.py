@@ -69,7 +69,6 @@ class CustomMesh:
                 np.sort([face_vertices[0], face_vertices[2]])]
 
     def get_face_area(self, face_index):
-        # TODO: INVESTIGATE NEGATIVE FACE AREA ...
         self.raw_mesh.add_attribute("face_area")
         return np.abs(self.raw_mesh.get_face_attribute("face_area")[face_index][0])
 

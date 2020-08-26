@@ -3,8 +3,8 @@ import quadpy
 
 from pymesh import form_mesh
 
-from .tools import integrate_on_triangle, triangulate, proj_unit_square, plot_set_boundary
-
+from .tools import integrate_on_triangle, triangulate, proj_unit_square
+from .plot_utils import plot_simple_set
 
 class SimpleSet:
     def __init__(self, boundary_vertices, mesh):
@@ -126,7 +126,7 @@ class SimpleSet:
             if n_iter % 100 == 0:
                 self.boundary_vertices = new_boundary_vertices
                 self.remesh(0.005)
-                plot_set_boundary(self, eta)
+                plot_simple_set(self, eta)
             else:
                 self.__init__(new_boundary_vertices, new_mesh)
 

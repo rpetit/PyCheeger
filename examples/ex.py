@@ -39,4 +39,3 @@ def eta(x):
 
 
 simple_set, obj_tab, grad_norm_tab = compute_cheeger(eta)
-print(obj_tab[-1])
