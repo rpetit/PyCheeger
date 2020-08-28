@@ -1,8 +1,31 @@
 import numpy as np
 import quadpy
 
-from numba import njit
+from numba import jit, prange
 from pymesh import triangle
+
+
+@jit(nopython=True, parallel=True)
+def winding(x, vertices):
+    wn = 0
+
+    for i_current in prange(len(vertices)):
+    # for i_current in range(len(vertices)):
+        if i_current != len(vertices) - 1:
+            i_next = i_current + 1
+        else:
+            i_next = 0
+
+        det = (vertices[i_next, 0] - vertices[i_current, 0]) * (x[1] - vertices[i_current, 1])
+        det -= (vertices[i_next, 1] - vertices[i_current, 1]) * (x[0] - vertices[i_current, 0])
+
+        if det > 0 and vertices[i_current, 1] <= x[1] < vertices[i_next, 1]:
+            wn += 1
+
+        if det < 0 and vertices[i_next, 1] < x[1] < vertices[i_current, 1]:
+            wn += -1
+
+    return wn
 
 
 def triangulate(vertices, max_area=0.005):
@@ -22,7 +45,7 @@ def triangulate(vertices, max_area=0.005):
     return raw_mesh
 
 
-@njit
+@jit(nopython=True)
 def find_threshold(x):
     y = np.sort(np.abs(x))[::-1]
     j = len(y)
@@ -48,14 +71,6 @@ def proj_one_unit_ball(x):
         res = np.where(np.abs(x) > thresh, (1 - thresh / np.abs(x)) * x, 0)
     else:
         res = x
-
-    return res
-
-
-def proj_unit_square(x):
-    res = x.copy()
-    res[np.where(res > 1)] = 1
-    res[np.where(res < -1)] = -1
 
     return res
 

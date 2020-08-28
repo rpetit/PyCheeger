@@ -3,8 +3,9 @@ import quadpy
 
 from pymesh import form_mesh
 
-from .tools import integrate_on_triangle, triangulate, proj_unit_square
+from .tools import winding, integrate_on_triangle, triangulate
 from .plot_utils import plot_simple_set
+
 
 class SimpleSet:
     def __init__(self, boundary_vertices, mesh):
@@ -27,6 +28,9 @@ class SimpleSet:
         self.perimeter = np.sum(np.linalg.norm(rolled_boundary_vertices - boundary_vertices, axis=1))
         self.is_clockwise = (np.sum((rolled_boundary_vertices[:, 0] - boundary_vertices[:, 0]) *
                                     (rolled_boundary_vertices[:, 1] + boundary_vertices[:, 1])) > 0)
+
+    def contains(self, x):
+        return winding(x, self.boundary_vertices) != 0
 
     def compute_weighted_area(self, eta):
         res = 0
@@ -76,7 +80,6 @@ class SimpleSet:
 
         return gradient
 
-    # TODO: implement line search
     def perform_gradient_descent(self, eta, step_size, max_iter, eps_stop):
         obj_tab = []
         grad_norm_tab = []
@@ -105,7 +108,7 @@ class SimpleSet:
             ag_condition = False
 
             while not ag_condition:
-                new_boundary_vertices = proj_unit_square(self.boundary_vertices - t * gradient)
+                new_boundary_vertices = self.boundary_vertices - t * gradient
 
                 new_mesh_vertices = self.mesh.vertices.copy()
                 new_mesh_vertices[self.boundary_indices] = new_boundary_vertices
@@ -121,7 +124,8 @@ class SimpleSet:
                 t = beta * t
 
             n_iter += 1
-            convergence = (np.linalg.norm(new_boundary_vertices - self.boundary_vertices) / np.linalg.norm(self.boundary_vertices)) <= eps_stop
+            convergence = np.max(np.linalg.norm(new_boundary_vertices - self.boundary_vertices, axis=1) \
+                                 / np.linalg.norm(self.boundary_vertices, axis=1)) <= eps_stop
 
             if n_iter % 100 == 0:
                 self.boundary_vertices = new_boundary_vertices
@@ -131,3 +135,14 @@ class SimpleSet:
                 self.__init__(new_boundary_vertices, new_mesh)
 
         return obj_tab, grad_norm_tab
+
+
+class Disk(SimpleSet):
+    def __init__(self, center, radius, num_vertices=20, max_tri_area=0.005):
+        t = np.linspace(0, 2 * np.pi, num_vertices + 1)[:-1]
+        complex_vertices = center[0] + 1j * center[1] + radius * np.exp(1j * t)
+        vertices = np.stack([np.real(complex_vertices), np.imag(complex_vertices)], axis=1)
+
+        mesh = triangulate(vertices, max_tri_area)
+
+        SimpleSet.__init__(self, vertices, mesh)
