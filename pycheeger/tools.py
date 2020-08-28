@@ -10,7 +10,6 @@ def winding(x, vertices):
     wn = 0
 
     for i_current in prange(len(vertices)):
-    # for i_current in range(len(vertices)):
         if i_current != len(vertices) - 1:
             i_next = i_current + 1
         else:

@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="PyCheeger",
+    name="pycheeger",
     version="0.0.1",
     author="Romain Petit",
     author_email="romain.petit@inria.fr",
