@@ -1,3 +1,4 @@
+import time
 import numpy as np
 
 from numba import jit
@@ -26,7 +27,7 @@ def eta_aux2(x, res):
     for j in range(x.shape[1]):
         for i in range(len(coeffs)):
             squared_norm = (x[0, j] - means[i, 0]) ** 2 + (x[1, j] - means[i, 1]) ** 2
-            res[j] += coeffs[i] * np.exp(-squared_norm/ (2 * std**2))
+            res[j] += coeffs[i] * np.exp(-squared_norm / (2 * std**2))
 
 
 def eta(x):
@@ -38,4 +39,8 @@ def eta(x):
         return res
 
 
-simple_set, obj_tab, grad_norm_tab = compute_cheeger(eta)
+start = time.time()
+simple_set, obj_tab, grad_norm_tab = compute_cheeger(eta, max_tri_area=0.001, max_primal_dual_iter=20000, step_size=1e-2)
+end = time.time()
+
+print(end - start)

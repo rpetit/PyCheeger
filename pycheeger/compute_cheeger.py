@@ -26,8 +26,7 @@ def compute_cheeger(eta, max_tri_area=0.002, max_primal_dual_iter=10000, step_si
 
     boundary_vertices_index, boundary_edges_index = mesh.find_path(np.where(np.abs(mesh.grad_mat.dot(u)) > 0)[0])
     boundary_vertices = mesh.vertices[boundary_vertices_index][::2]
-    mesh = triangulate(boundary_vertices, max_area=0.005)
-    simple_set = SimpleSet(boundary_vertices, mesh)
+    simple_set = SimpleSet(boundary_vertices)
 
     plot_simple_set(simple_set, eta)
 

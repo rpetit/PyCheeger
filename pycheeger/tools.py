@@ -1,6 +1,7 @@
 import numpy as np
 import quadpy
 
+from math import sqrt
 from numba import jit, prange
 from pymesh import triangle
 
@@ -82,12 +83,21 @@ def prox_dot_prod(x, tau, eta):
     return x - tau * eta
 
 
-def integrate_on_triangle(eta, vertices):
-    # TODO: add scheme options
-    scheme = quadpy.triangle.xiao_gimbutas_09()
-    val = scheme.integrate(eta, vertices)
+SCHEME = quadpy.t2.get_good_scheme(6)
 
-    return val
+
+def integrate_on_triangle(eta, vertices):
+    x1, x2, x3 = vertices
+    a = sqrt((x2[0] - x1[0]) ** 2 + (x2[1] - x1[1]) ** 2)
+    b = sqrt((x3[0] - x2[0]) ** 2 + (x3[1] - x2[1]) ** 2)
+    c = sqrt((x3[0] - x1[0]) ** 2 + (x3[1] - x1[1]) ** 2)
+
+    p = (a + b + c) / 2
+    area = sqrt(p * (p - a) * (p - b) * (p - c))
+
+    x = np.dot(vertices.T, SCHEME.points)
+
+    return area * np.dot(eta(x), SCHEME.weights)
 
 
 def postprocess_indicator(x, grad_mat):

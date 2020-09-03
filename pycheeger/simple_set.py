@@ -1,48 +1,57 @@
 import numpy as np
 import quadpy
 
-from pymesh import form_mesh
-
 from .tools import winding, integrate_on_triangle, triangulate
 from .plot_utils import plot_simple_set
 
 
 class SimpleSet:
-    def __init__(self, boundary_vertices, mesh):
+    def __init__(self, boundary_vertices, max_area=0.005):
         self.boundary_vertices = boundary_vertices
-        self.mesh = mesh
-
-        self.boundary_indices = np.zeros(len(boundary_vertices), dtype='int')
-
-        for i in range(len(boundary_vertices)):
-            j = 0
-
-            while not np.all(mesh.vertices[j] == boundary_vertices[i]):
-                j += 1
-
-            self.boundary_indices[i] = j
-
         self.num_boundary_vertices = len(boundary_vertices)
+        self.boundary_vertices_indices = np.arange(self.num_boundary_vertices)
 
         rolled_boundary_vertices = np.roll(boundary_vertices, -1, axis=0)
-        self.perimeter = np.sum(np.linalg.norm(rolled_boundary_vertices - boundary_vertices, axis=1))
         self.is_clockwise = (np.sum((rolled_boundary_vertices[:, 0] - boundary_vertices[:, 0]) *
                                     (rolled_boundary_vertices[:, 1] + boundary_vertices[:, 1])) > 0)
+
+        mesh = triangulate(boundary_vertices, max_area=max_area)
+
+        self.mesh_vertices = mesh.vertices.copy()
+        self.mesh_faces = mesh.faces.copy()
+
+        boundary_faces_indices = []
+
+        for i in range(len(self.mesh_faces)):
+            if len(np.intersect1d(self.boundary_vertices_indices, self.mesh_faces[i])) > 0 :
+                boundary_faces_indices.append(i)
+
+        self.boundary_faces_indices = np.array(boundary_faces_indices)
 
     def contains(self, x):
         return winding(x, self.boundary_vertices) != 0
 
-    def compute_weighted_area(self, eta):
-        res = 0
+    def compute_perimeter(self):
+        rolled_boundary_vertices = np.roll(self.boundary_vertices, -1, axis=0)
+        res = np.sum(np.linalg.norm(rolled_boundary_vertices - self.boundary_vertices, axis=1))
+        return res
 
-        for face in self.mesh.faces:
-            res += integrate_on_triangle(eta, self.mesh.vertices[face])
+    def compute_weighted_areas(self, eta):
+        num_mesh_faces = len(self.mesh_faces)
+        res = np.zeros(num_mesh_faces)
+
+        for i in range(num_mesh_faces):
+            res[i] = integrate_on_triangle(eta, self.mesh_vertices[self.mesh_faces[i]])
 
         return res
 
+    def compute_weighted_area(self, eta):
+        return np.sum(self.compute_weighted_areas(eta))
+
     def remesh(self, max_area):
         new_mesh = triangulate(self.boundary_vertices, max_area)
-        self.__init__(self.boundary_vertices, new_mesh)
+        self.mesh_vertices = new_mesh.vertices.copy()
+        self.mesh_faces = new_mesh.faces.copy()
 
     def compute_perimeter_gradient(self):
         gradient = np.zeros_like(self.boundary_vertices)
@@ -56,7 +65,7 @@ class SimpleSet:
         return gradient
 
     def compute_weighted_area_gradient(self, eta):
-        scheme = quadpy.line_segment.gauss_patterson(5)
+        scheme = quadpy.c1.gauss_patterson(5)
         gradient = np.zeros_like(self.boundary_vertices)
 
         for i in range(self.num_boundary_vertices):
@@ -87,13 +96,14 @@ class SimpleSet:
         convergence = False
         n_iter = 0
 
+        areas = self.compute_weighted_areas(eta)
+        perimeter = self.compute_perimeter()
+        area = np.sum(areas)
+
+        obj = perimeter / np.abs(area)
+        obj_tab.append(obj)
+
         while not convergence and n_iter < max_iter:
-            perimeter = self.perimeter
-            area = self.compute_weighted_area(eta)
-
-            obj = perimeter / np.abs(area)
-            obj_tab.append(obj)
-
             perimeter_gradient = self.compute_perimeter_gradient()
             area_gradient = self.compute_weighted_area_gradient(eta)
 
@@ -107,32 +117,34 @@ class SimpleSet:
 
             ag_condition = False
 
+            former_obj = obj
+            former_boundary_vertices = self.boundary_vertices
+
             while not ag_condition:
-                new_boundary_vertices = self.boundary_vertices - t * gradient
+                self.boundary_vertices = former_boundary_vertices - t * gradient
+                self.mesh_vertices[self.boundary_vertices_indices] = self.boundary_vertices
 
-                new_mesh_vertices = self.mesh.vertices.copy()
-                new_mesh_vertices[self.boundary_indices] = new_boundary_vertices
+                for i in self.boundary_faces_indices:
+                    areas[i] = integrate_on_triangle(eta, self.mesh_vertices[self.mesh_faces[i]])
 
-                new_mesh = form_mesh(new_mesh_vertices, self.mesh.faces)
+                area = np.sum(areas)
+                perimeter = self.compute_perimeter()
+                obj = perimeter / np.abs(area)
 
-                new_curve = SimpleSet(new_boundary_vertices, new_mesh)
-                new_area = new_curve.compute_weighted_area(eta)
-                new_perimeter = new_curve.perimeter
-                new_obj = new_perimeter / np.abs(new_area)
-
-                ag_condition = (new_obj <= obj - alpha * t * np.linalg.norm(gradient) ** 2)
+                ag_condition = (obj <= former_obj - alpha * t * np.linalg.norm(gradient) ** 2)
                 t = beta * t
 
             n_iter += 1
-            convergence = np.max(np.linalg.norm(new_boundary_vertices - self.boundary_vertices, axis=1) \
-                                 / np.linalg.norm(self.boundary_vertices, axis=1)) <= eps_stop
+            obj_tab.append(obj)
+
+            convergence = np.max(np.linalg.norm(self.boundary_vertices - former_boundary_vertices, axis=1)
+                                 / np.linalg.norm(former_boundary_vertices, axis=1)) <= eps_stop
 
             if n_iter % 100 == 0:
-                self.boundary_vertices = new_boundary_vertices
                 self.remesh(0.005)
+                areas = self.compute_weighted_areas(eta)
+                area = np.sum(areas)
                 plot_simple_set(self, eta)
-            else:
-                self.__init__(new_boundary_vertices, new_mesh)
 
         return obj_tab, grad_norm_tab
 
@@ -143,6 +155,4 @@ class Disk(SimpleSet):
         complex_vertices = center[0] + 1j * center[1] + radius * np.exp(1j * t)
         vertices = np.stack([np.real(complex_vertices), np.imag(complex_vertices)], axis=1)
 
-        mesh = triangulate(vertices, max_tri_area)
-
-        SimpleSet.__init__(self, vertices, mesh)
+        SimpleSet.__init__(self, vertices, max_tri_area)
