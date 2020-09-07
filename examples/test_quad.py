@@ -25,49 +25,57 @@ def phi(x):
     return 0.5 * res
 
 
-x = np.random.random((1, 2))
-t = 1e-5
-print("check finite diff")
-print(phi(x + t * np.array([[1, 0]]))[0, 0] - phi(x)[0, 0] - t * 0.5 * aux(x.T)[0])
-print(phi(x + t * np.array([[0, 1]]))[0, 1] - phi(x)[0, 1] - t * 0.5 * aux(x.T)[0])
-
-print("\nanalytic value")
-print(2 * np.pi * std**2 * (1 - np.exp(-1 / (2 * std ** 2))))
-
-scheme = quadpy.s2.get_good_scheme(17)
-print("\ndisk quadrature")
-print(scheme.integrate(aux, [0.0, 0.0], 1.0))
+# x = np.random.random((1, 2))
+# t = 1e-5
+# print("check finite diff")
+# print(phi(x + t * np.array([[1, 0]]))[0, 0] - phi(x)[0, 0] - t * 0.5 * aux(x.T)[0])
+# print(phi(x + t * np.array([[0, 1]]))[0, 1] - phi(x)[0, 1] - t * 0.5 * aux(x.T)[0])
+#
+# print("\nanalytic value")
+# print(2 * np.pi * std**2 * (1 - np.exp(-1 / (2 * std ** 2))))
+#
+# scheme = quadpy.s2.get_good_scheme(17)
+# print("\ndisk quadrature")
+# print(scheme.integrate(aux, [0.0, 0.0], 1.0))
 
 
 res1 = 0
+import time
 
-scheme = quadpy.c1.gauss_patterson(8)
+start = time.time()
+scheme = quadpy.c1.gauss_patterson(6)
 
-for i in range(E.num_boundary_vertices):
-    current = E.boundary_vertices[i]
-    next = E.boundary_vertices[(i+1) % E.num_boundary_vertices]
+for i in range(1000):
 
-    if E.is_clockwise:
-        rot = np.array([[0, -1], [1, 0]])
-    else:
-        rot = np.array([[0, 1], [-1, 0]])
+    for i in range(E.num_boundary_vertices):
+        current = E.boundary_vertices[i]
+        next = E.boundary_vertices[(i+1) % E.num_boundary_vertices]
 
-    normal = rot.dot(next - current)
+        if E.is_clockwise:
+            rot = np.array([[0, -1], [1, 0]])
+        else:
+            rot = np.array([[0, 1], [-1, 0]])
 
-    def lala(t):
-        return np.dot(phi(np.outer(1 - t, current) + np.outer(t, next)), normal)
+        normal = rot.dot(next - current)
 
-    res1 += scheme.integrate(lala, [0.0, 1.0])
+        def lala(t):
+            return np.dot(phi(np.outer(1 - t, current) + np.outer(t, next)), normal)
+
+        res1 += scheme.integrate(lala, [0.0, 1.0])
+
+end = time.time()
+
+print(end - start)
 
 print("\nline quadrature")
 print(res1)
 
-res2 = 0
-
-scheme = quadpy.t2.get_good_scheme(12)
-
-for i in range(len(E.mesh_faces)):
-    res2 += scheme.integrate(aux, E.mesh_vertices[E.mesh_faces[i]])
-
-print("\ntriangle quadrature")
-print(res2)
+# res2 = 0
+#
+# scheme = quadpy.t2.get_good_scheme(12)
+#
+# for i in range(len(E.mesh_faces)):
+#     res2 += scheme.integrate(aux, E.mesh_vertices[E.mesh_faces[i]])
+#
+# print("\ntriangle quadrature")
+# print(res2)

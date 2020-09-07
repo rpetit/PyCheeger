@@ -1,7 +1,7 @@
 import numpy as np
 import quadpy
 
-from .tools import winding, integrate_on_triangle, triangulate
+from .tools import winding, integrate_on_triangles, triangulate
 from .plot_utils import plot_simple_set
 
 
@@ -15,18 +15,11 @@ class SimpleSet:
         self.is_clockwise = (np.sum((rolled_boundary_vertices[:, 0] - boundary_vertices[:, 0]) *
                                     (rolled_boundary_vertices[:, 1] + boundary_vertices[:, 1])) > 0)
 
-        mesh = triangulate(boundary_vertices, max_area=max_area)
+        self.mesh_vertices = None
+        self.mesh_faces = None
+        self.boundary_faces_indices = None
 
-        self.mesh_vertices = mesh.vertices.copy()
-        self.mesh_faces = mesh.faces.copy()
-
-        boundary_faces_indices = []
-
-        for i in range(len(self.mesh_faces)):
-            if len(np.intersect1d(self.boundary_vertices_indices, self.mesh_faces[i])) > 0 :
-                boundary_faces_indices.append(i)
-
-        self.boundary_faces_indices = np.array(boundary_faces_indices)
+        self.mesh(max_area)
 
     def contains(self, x):
         return winding(x, self.boundary_vertices) != 0
@@ -37,21 +30,25 @@ class SimpleSet:
         return res
 
     def compute_weighted_areas(self, eta):
-        num_mesh_faces = len(self.mesh_faces)
-        res = np.zeros(num_mesh_faces)
-
-        for i in range(num_mesh_faces):
-            res[i] = integrate_on_triangle(eta, self.mesh_vertices[self.mesh_faces[i]])
-
-        return res
+        triangles = self.mesh_vertices[self.mesh_faces]
+        return integrate_on_triangles(eta, triangles)
 
     def compute_weighted_area(self, eta):
         return np.sum(self.compute_weighted_areas(eta))
 
-    def remesh(self, max_area):
-        new_mesh = triangulate(self.boundary_vertices, max_area)
-        self.mesh_vertices = new_mesh.vertices.copy()
-        self.mesh_faces = new_mesh.faces.copy()
+    def mesh(self, max_area):
+        mesh = triangulate(self.boundary_vertices, max_area=max_area)
+
+        self.mesh_vertices = mesh.vertices.copy()
+        self.mesh_faces = mesh.faces.copy()
+
+        boundary_faces_indices = []
+
+        for i in range(len(self.mesh_faces)):
+            if len(np.intersect1d(self.boundary_vertices_indices, self.mesh_faces[i])) > 0:
+                boundary_faces_indices.append(i)
+
+        self.boundary_faces_indices = np.array(boundary_faces_indices)
 
     def compute_perimeter_gradient(self):
         gradient = np.zeros_like(self.boundary_vertices)
@@ -65,7 +62,7 @@ class SimpleSet:
         return gradient
 
     def compute_weighted_area_gradient(self, eta):
-        scheme = quadpy.c1.gauss_patterson(5)
+        scheme = quadpy.c1.gauss_patterson(6)
         gradient = np.zeros_like(self.boundary_vertices)
 
         for i in range(self.num_boundary_vertices):
@@ -124,8 +121,7 @@ class SimpleSet:
                 self.boundary_vertices = former_boundary_vertices - t * gradient
                 self.mesh_vertices[self.boundary_vertices_indices] = self.boundary_vertices
 
-                for i in self.boundary_faces_indices:
-                    areas[i] = integrate_on_triangle(eta, self.mesh_vertices[self.mesh_faces[i]])
+                areas[self.boundary_faces_indices] = integrate_on_triangles(eta, self.mesh_vertices[self.mesh_faces[self.boundary_faces_indices]])
 
                 area = np.sum(areas)
                 perimeter = self.compute_perimeter()
@@ -141,7 +137,7 @@ class SimpleSet:
                                  / np.linalg.norm(former_boundary_vertices, axis=1)) <= eps_stop
 
             if n_iter % 100 == 0:
-                self.remesh(0.005)
+                self.mesh(0.005)
                 areas = self.compute_weighted_areas(eta)
                 area = np.sum(areas)
                 plot_simple_set(self, eta)

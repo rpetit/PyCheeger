@@ -3,7 +3,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from pymesh import form_mesh, mesh_to_graph
-from .tools import integrate_on_triangle
+from .tools import integrate_on_triangles
 
 
 class CustomMesh:
@@ -95,12 +95,7 @@ class CustomMesh:
         self.grad_mat = csr_matrix((data, indices, indptr))
 
     def integrate(self, eta):
-        res = np.zeros(self.num_faces)
-
-        for i in range(self.num_faces):
-            res[i] = integrate_on_triangle(eta, self.vertices[self.faces[i]])
-
-        return res
+        return integrate_on_triangles(eta, self.vertices[self.faces])
 
     def find_path(self, edges_index):
         edges = self.edges[edges_index]

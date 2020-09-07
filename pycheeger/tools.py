@@ -86,16 +86,16 @@ def prox_dot_prod(x, tau, eta):
 SCHEME = quadpy.t2.get_good_scheme(6)
 
 
-def integrate_on_triangle(eta, vertices):
-    x1, x2, x3 = vertices
-    a = sqrt((x2[0] - x1[0]) ** 2 + (x2[1] - x1[1]) ** 2)
-    b = sqrt((x3[0] - x2[0]) ** 2 + (x3[1] - x2[1]) ** 2)
-    c = sqrt((x3[0] - x1[0]) ** 2 + (x3[1] - x1[1]) ** 2)
+def integrate_on_triangles(eta, triangles):
+    a = np.linalg.norm(triangles[:, 1] - triangles[:, 0], axis=1)
+    b = np.linalg.norm(triangles[:, 2] - triangles[:, 1], axis=1)
+    c = np.linalg.norm(triangles[:, 2] - triangles[:, 0], axis=1)
 
     p = (a + b + c) / 2
-    area = sqrt(p * (p - a) * (p - b) * (p - c))
+    area = np.sqrt(p * (p - a) * (p - b) * (p - c))
 
-    x = np.dot(vertices.T, SCHEME.points)
+    x = np.tensordot(triangles, SCHEME.points, axes=([1], [0]))
+    x = np.swapaxes(x, 1, 2)
 
     return area * np.dot(eta(x), SCHEME.weights)
 
