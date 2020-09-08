@@ -1,7 +1,6 @@
 import numpy as np
 import quadpy
 
-from math import sqrt
 from numba import jit, prange
 from pymesh import triangle
 

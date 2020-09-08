@@ -7,7 +7,7 @@ from scipy.special import erf
 from pycheeger import Disk
 
 
-E = Disk(np.array([0, 0]), 1, num_vertices=100)
+E = Disk(np.array([0, 0]), 1, num_vertices=30)
 c = np.zeros(2)
 std = 0.1
 
@@ -31,8 +31,8 @@ def phi(x):
 # print(phi(x + t * np.array([[1, 0]]))[0, 0] - phi(x)[0, 0] - t * 0.5 * aux(x.T)[0])
 # print(phi(x + t * np.array([[0, 1]]))[0, 1] - phi(x)[0, 1] - t * 0.5 * aux(x.T)[0])
 #
-# print("\nanalytic value")
-# print(2 * np.pi * std**2 * (1 - np.exp(-1 / (2 * std ** 2))))
+print("\nanalytic value")
+print(2 * np.pi * std**2 * (1 - np.exp(-1 / (2 * std ** 2))))
 #
 # scheme = quadpy.s2.get_good_scheme(17)
 # print("\ndisk quadrature")
@@ -70,12 +70,12 @@ print(end - start)
 print("\nline quadrature")
 print(res1)
 
-# res2 = 0
-#
-# scheme = quadpy.t2.get_good_scheme(12)
-#
-# for i in range(len(E.mesh_faces)):
-#     res2 += scheme.integrate(aux, E.mesh_vertices[E.mesh_faces[i]])
-#
-# print("\ntriangle quadrature")
-# print(res2)
+res2 = 0
+
+scheme = quadpy.t2.get_good_scheme(6)
+
+for i in range(len(E.mesh_faces)):
+    res2 += scheme.integrate(aux, E.mesh_vertices[E.mesh_faces[i]])
+
+print("\ntriangle quadrature")
+print(res2)

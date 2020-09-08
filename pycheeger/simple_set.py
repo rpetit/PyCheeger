@@ -65,18 +65,18 @@ class SimpleSet:
         scheme = quadpy.c1.gauss_patterson(6)
         gradient = np.zeros_like(self.boundary_vertices)
 
+        if self.is_clockwise:
+            rot = np.array([[0, -1], [1, 0]])
+        else:
+            rot = np.array([[0, 1], [-1, 0]])
+
         for i in range(self.num_boundary_vertices):
             previous = self.boundary_vertices[(i-1) % self.num_boundary_vertices]
             current = self.boundary_vertices[i]
             next = self.boundary_vertices[(i+1) % self.num_boundary_vertices]
 
-            weight1 = scheme.integrate(lambda t: eta(np.outer(previous, 1-t) + np.outer(current, t)) * t, [0.0, 1.0])
-            weight2 = scheme.integrate(lambda t: eta(np.outer(current, 1-t) + np.outer(next, t)) * (1-t), [0.0, 1.0])
-
-            if self.is_clockwise:
-                rot = np.array([[0, -1], [1, 0]])
-            else:
-                rot = np.array([[0, 1], [-1, 0]])
+            weight1 = scheme.integrate(lambda t: eta(np.outer(1-t, previous) + np.outer(t, current)) * t, [0.0, 1.0])
+            weight2 = scheme.integrate(lambda t: eta(np.outer(1-t, current) + np.outer(t, next)) * (1-t), [0.0, 1.0])
 
             # /!\ normals do not have unit length (length of the segment in change of variable) /!\
             normal1 = rot.dot(current - previous)
@@ -133,14 +133,13 @@ class SimpleSet:
             n_iter += 1
             obj_tab.append(obj)
 
-            convergence = np.max(np.linalg.norm(self.boundary_vertices - former_boundary_vertices, axis=1)
-                                 / np.linalg.norm(former_boundary_vertices, axis=1)) <= eps_stop
+            convergence = np.linalg.norm(gradient) / self.num_boundary_vertices <= eps_stop
 
-            if n_iter % 100 == 0:
-                self.mesh(0.005)
-                areas = self.compute_weighted_areas(eta)
-                area = np.sum(areas)
-                plot_simple_set(self, eta)
+            # if n_iter % 100 == 0:
+            #     self.mesh(0.005)
+            #     areas = self.compute_weighted_areas(eta)
+            #     area = np.sum(areas)
+            #     plot_simple_set(self, eta)
 
         return obj_tab, grad_norm_tab
 
