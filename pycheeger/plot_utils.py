@@ -47,9 +47,9 @@ def plot_simple_set(simple_set, eta, display_inner_mesh=False):
     fig.colorbar(im, ax=ax)
 
     if display_inner_mesh:
-        triangulation = Triangulation(simple_set.mesh.vertices[:, 0],
-                                      simple_set.mesh.vertices[:, 1],
-                                      simple_set.mesh.faces)
+        triangulation = Triangulation(simple_set.mesh_vertices[:, 0],
+                                      simple_set.mesh_vertices[:, 1],
+                                      simple_set.mesh_faces)
 
         ax.triplot(triangulation, color='black', alpha=0.3)
 

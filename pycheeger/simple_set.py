@@ -62,7 +62,7 @@ class SimpleSet:
         return gradient
 
     def compute_weighted_area_gradient(self, eta):
-        scheme = quadpy.c1.gauss_patterson(6)
+        scheme = quadpy.c1.gauss_patterson(5)
         gradient = np.zeros_like(self.boundary_vertices)
 
         if self.is_clockwise:
@@ -136,10 +136,11 @@ class SimpleSet:
             convergence = np.linalg.norm(gradient) / self.num_boundary_vertices <= eps_stop
 
             # if n_iter % 100 == 0:
-            #     self.mesh(0.005)
-            #     areas = self.compute_weighted_areas(eta)
-            #     area = np.sum(areas)
-            #     plot_simple_set(self, eta)
+                # self.mesh(0.005)
+                # areas = self.compute_weighted_areas(eta)
+                # area = np.sum(areas)
+
+            plot_simple_set(self, eta, display_inner_mesh=True)
 
         return obj_tab, grad_norm_tab
 
