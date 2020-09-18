@@ -2,11 +2,10 @@ import numpy as np
 import quadpy
 
 from .tools import winding, integrate_on_triangles, triangulate
-from .plot_utils import plot_simple_set
 
 
 class SimpleSet:
-    def __init__(self, boundary_vertices, max_area=0.005):
+    def __init__(self, boundary_vertices, max_area=0.002):
         self.boundary_vertices = boundary_vertices
         self.num_boundary_vertices = len(boundary_vertices)
         self.boundary_vertices_indices = np.arange(self.num_boundary_vertices)
@@ -29,12 +28,12 @@ class SimpleSet:
         res = np.sum(np.linalg.norm(rolled_boundary_vertices - self.boundary_vertices, axis=1))
         return res
 
-    def compute_weighted_areas(self, eta):
+    def compute_weighted_areas(self, f):
         triangles = self.mesh_vertices[self.mesh_faces]
-        return integrate_on_triangles(eta, triangles)
+        return integrate_on_triangles(f, triangles)
 
-    def compute_weighted_area(self, eta):
-        return np.sum(self.compute_weighted_areas(eta))
+    def compute_weighted_area(self, f):
+        return np.sum(self.compute_weighted_areas(f))
 
     def mesh(self, max_area):
         mesh = triangulate(self.boundary_vertices, max_area=max_area)
@@ -61,39 +60,47 @@ class SimpleSet:
 
         return gradient
 
-    def compute_weighted_area_gradient(self, eta):
-        scheme = quadpy.c1.gauss_patterson(5)
-        gradient = np.zeros_like(self.boundary_vertices)
+    def compute_weighted_area_gradient(self, f):
+        scheme = quadpy.c1.gauss_patterson(6)
 
         if self.is_clockwise:
             rot = np.array([[0, -1], [1, 0]])
         else:
             rot = np.array([[0, 1], [-1, 0]])
 
-        for i in range(self.num_boundary_vertices):
-            previous = self.boundary_vertices[(i-1) % self.num_boundary_vertices]
-            current = self.boundary_vertices[i]
-            next = self.boundary_vertices[(i+1) % self.num_boundary_vertices]
+        rolled_vertices1 = np.roll(self.boundary_vertices, 1, axis=0)
+        rolled_vertices2 = np.roll(self.boundary_vertices, -1, axis=0)
 
-            weight1 = scheme.integrate(lambda t: eta(np.outer(1-t, previous) + np.outer(t, current)) * t, [0.0, 1.0])
-            weight2 = scheme.integrate(lambda t: eta(np.outer(1-t, current) + np.outer(t, next)) * (1-t), [0.0, 1.0])
+        t = 0.5 * (1 + scheme.points)
+        x1 = np.multiply.outer(1-t, rolled_vertices1) + np.multiply.outer(t, self.boundary_vertices)
+        x2 = np.multiply.outer(1-t, self.boundary_vertices) + np.multiply.outer(t, rolled_vertices2)
 
-            # /!\ normals do not have unit length (length of the segment in change of variable) /!\
-            normal1 = rot.dot(current - previous)
-            normal2 = rot.dot(next - current)
+        eval1_flat = f(np.reshape(x1, (-1, 2)))
+        eval2_flat = f(np.reshape(x2, (-1, 2)))
+        eval1 = np.reshape(eval1_flat, x1.shape[:2] + eval1_flat.shape[1:])
+        eval1 = eval1 * np.expand_dims(t, tuple(np.arange(1, eval1.ndim)))
+        eval2 = np.reshape(eval2_flat, x2.shape[:2] + eval2_flat.shape[1:])
+        eval2 = eval2 * np.expand_dims(1-t, tuple(np.arange(1, eval2.ndim)))
 
-            gradient[i] = weight1 * normal1 + weight2 * normal2
+        weights1 = 0.5 * np.sum(np.expand_dims(scheme.weights, tuple(np.arange(1, eval1.ndim))) * eval1, axis=0)
+        weights2 = 0.5 * np.sum(np.expand_dims(scheme.weights, tuple(np.arange(1, eval2.ndim))) * eval2, axis=0)
 
-        return gradient
+        normals1 = np.dot(self.boundary_vertices - rolled_vertices1, rot.T)
+        normals2 = np.dot(rolled_vertices2 - self.boundary_vertices, rot.T)
 
-    def perform_gradient_descent(self, eta, step_size, max_iter, eps_stop):
+        gradient1 = np.expand_dims(np.moveaxis(weights1, 0, -1), -1) * np.expand_dims(normals1, tuple(np.arange(weights1.ndim-1)))
+        gradient2 = np.expand_dims(np.moveaxis(weights2, 0, -1), -1) * np.expand_dims(normals2, tuple(np.arange(weights2.ndim-1)))
+
+        return gradient1 + gradient2
+
+    def perform_gradient_descent(self, f, step_size, max_iter, eps_stop):
         obj_tab = []
         grad_norm_tab = []
 
         convergence = False
         n_iter = 0
 
-        areas = self.compute_weighted_areas(eta)
+        areas = self.compute_weighted_areas(f)
         perimeter = self.compute_perimeter()
         area = np.sum(areas)
 
@@ -102,7 +109,7 @@ class SimpleSet:
 
         while not convergence and n_iter < max_iter:
             perimeter_gradient = self.compute_perimeter_gradient()
-            area_gradient = self.compute_weighted_area_gradient(eta)
+            area_gradient = self.compute_weighted_area_gradient(f)
 
             gradient = np.sign(area) * (perimeter_gradient * area - area_gradient * perimeter) / area ** 2
 
@@ -121,7 +128,7 @@ class SimpleSet:
                 self.boundary_vertices = former_boundary_vertices - t * gradient
                 self.mesh_vertices[self.boundary_vertices_indices] = self.boundary_vertices
 
-                areas[self.boundary_faces_indices] = integrate_on_triangles(eta, self.mesh_vertices[self.mesh_faces[self.boundary_faces_indices]])
+                areas[self.boundary_faces_indices] = integrate_on_triangles(f, self.mesh_vertices[self.mesh_faces[self.boundary_faces_indices]])
 
                 area = np.sum(areas)
                 perimeter = self.compute_perimeter()
@@ -135,12 +142,13 @@ class SimpleSet:
 
             convergence = np.linalg.norm(gradient) / self.num_boundary_vertices <= eps_stop
 
-            # if n_iter % 100 == 0:
-                # self.mesh(0.005)
-                # areas = self.compute_weighted_areas(eta)
-                # area = np.sum(areas)
+            if n_iter % 100 == 0:
+                self.mesh(0.005)
+                areas = self.compute_weighted_areas(f)
+                area = np.sum(areas)
+                # plot_simple_set(self, f)
 
-            plot_simple_set(self, eta, display_inner_mesh=True)
+        self.mesh(0.005)
 
         return obj_tab, grad_norm_tab
 

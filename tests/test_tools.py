@@ -1,7 +1,7 @@
 import numpy as np
 
 from pytest import approx
-from pycheeger.tools import find_threshold, proj_one_unit_ball
+from pycheeger.tools import find_threshold, proj_unit_l1_ball
 
 
 TOL = 1e-10
@@ -15,19 +15,19 @@ def test_find_threshold():
 
 def test_proj_one_unit_ball():
     x = np.array([-1, 9, 1, 8, -2, 10])
-    y = proj_one_unit_ball(x)
+    y = proj_unit_l1_ball(x)
 
     assert np.sum(np.abs(y)) <= 1 + TOL
 
     x = np.array([0, 2, 0])
-    y = proj_one_unit_ball(x)
+    y = proj_unit_l1_ball(x)
 
     assert approx(y[0], 0, TOL)
     assert approx(y[1], 0, TOL)
     assert approx(y[2], 0, TOL)
 
     x = np.array([1, 1])
-    y = proj_one_unit_ball(x)
+    y = proj_unit_l1_ball(x)
 
     assert approx(y[0], 1/2, TOL)
     assert approx(y[1], 1/2, TOL)

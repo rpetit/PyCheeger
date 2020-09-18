@@ -7,6 +7,22 @@ from pymesh import triangle
 
 @jit(nopython=True, parallel=True)
 def winding(x, vertices):
+    """
+    Compute the winding number of a closed polygonal curve described by its vertices around the point x
+
+    Parameters
+    ----------
+    x : array, shape (2,)
+        Point around which the winding number is computed
+    vertices : array, shape (N, 2)
+        Coordinates of the curve's vertices
+
+    Returns
+    -------
+    wn : float
+        The winding number
+
+    """
     wn = 0
 
     for i_current in prange(len(vertices)):
@@ -28,9 +44,26 @@ def winding(x, vertices):
 
 
 def triangulate(vertices, max_area=0.005):
-    tri = triangle()
-    tri.points = vertices
+    """
+    Triangulate the interior of a closed polygonal curve
 
+    Parameters
+    ----------
+    vertices : array, shape (N, 2)
+        Coordinates of the curve's vertices
+    max_area : float
+        Maximum triangle area, see pymesh.triangle
+
+    Returns
+    -------
+    raw_mesh : pymesh.Mesh
+        Output mesh, see pymesh.triangle and pymesh.Mesh
+
+    """
+    tri = triangle()
+
+    # points and segments define a planar straight line graph (vertices are assumed to be given ordered)
+    tri.points = vertices
     tri.segments = np.array([[i, (i+1) % len(vertices)] for i in range(len(vertices))])
 
     tri.max_area = max_area
@@ -46,6 +79,29 @@ def triangulate(vertices, max_area=0.005):
 
 @jit(nopython=True)
 def find_threshold(x):
+    """
+    Compute the value of the Lagrange multiplier involved in the projection of x into the unit l1 ball
+
+    Parameters
+    ----------
+    x : array, shape (N,)
+        Vector to be projected
+
+    Returns
+    -------
+    res : float
+        Value of the Lagrange multiplier
+
+    Notes
+    -----
+    Sorting based algorithm. See [1]_ for a detailed explanation of the computations and alternative algorithms.
+
+    References
+    ----------
+    .. [1] L. Condat, *Fast Projection onto the Simplex and the l1 Ball*, Mathematical Programming,
+           Series A, Springer, 2016, 158 (1), pp.575-585.
+
+    """
     y = np.sort(np.abs(x))[::-1]
     j = len(y)
     stop = False
@@ -64,7 +120,30 @@ def find_threshold(x):
     return res
 
 
-def proj_one_unit_ball(x):
+def proj_unit_l1_ball(x):
+    """
+    Projection onto the l1 unit ball
+
+    Parameters
+    ----------
+    x : array, shape (N,)
+        Vector to be projected
+
+    Returns
+    -------
+    res : array, shape (N,)
+        Projection
+
+    Notes
+    -----
+    See [1]_ for a detailed explanation of the computations and alternative algorithms.
+
+    References
+    ----------
+    .. [1] L. Condat, *Fast Projection onto the Simplex and the l1 Ball*, Mathematical Programming,
+           Series A, Springer, 2016, 158 (1), pp.575-585.
+
+    """
     if np.sum(np.abs(x)) > 1:
         thresh = find_threshold(np.abs(x))
         res = np.where(np.abs(x) > thresh, (1 - thresh / np.abs(x)) * x, 0)
@@ -75,35 +154,114 @@ def proj_one_unit_ball(x):
 
 
 def prox_inf_norm(x, tau):
-    return x - tau * proj_one_unit_ball(x / tau)
+    """
+    Proximal map of the l-infinity norm
+
+    Parameters
+    ----------
+    x : array, shape (N,)
+    tau : float
 
 
-def prox_dot_prod(x, tau, eta):
-    return x - tau * eta
+    Returns
+    -------
+    array, shape (N,)
+
+    Notes
+    -----
+    .. math:: prox_{\tau ||.||_{\infty}}(x) = x - \tau \text{proj}_{\{||.||_{\infty}\leq 1\}}(x / \tau)
+
+    """
+    return x - tau * proj_unit_l1_ball(x / tau)
+
+
+def prox_dot_prod(x, tau, a):
+    """
+    Proximal map of the inner product between x and a
+
+    Parameters
+    ----------
+    x : array, shape (N,)
+    tau : float
+    a : array, shape (N,)
+
+    Returns
+    -------
+    array, shape (N,)
+
+    """
+    return x - tau * a
 
 
 SCHEME = quadpy.t2.get_good_scheme(6)
 
 
-def integrate_on_triangles(eta, triangles):
+def integrate_on_triangles(f, triangles):
+    """
+    Numerical integration of f on a list of triangles
+
+    Parameters
+    ----------
+    f : function
+        Function to be integrated. f must handle array inputs with shape (N, 2). It can be vector valued
+    triangles : array, shape (N, 3, 2)
+        triangles[i, j] contains the coordinates of the j-th vertex of the i-th triangle
+
+    Returns
+    -------
+    array, shape (N,) or (N, D)
+        Value computed for the integral of f on each of the N triangles (if f takes values in dimension D, the shape of
+        the resulting array is (N, D))
+
+    """
+    num_triangles = len(triangles)
+    num_scheme_points = SCHEME.points.shape[1]
+
+    # vectorized computation of the triangles' edges length
     a = np.linalg.norm(triangles[:, 1] - triangles[:, 0], axis=1)
     b = np.linalg.norm(triangles[:, 2] - triangles[:, 1], axis=1)
     c = np.linalg.norm(triangles[:, 2] - triangles[:, 0], axis=1)
 
+    # computation of the areas using Heron's formula
     p = (a + b + c) / 2
     area = np.sqrt(p * (p - a) * (p - b) * (p - c))
 
-    x = np.tensordot(triangles, SCHEME.points, axes=([1], [0]))
-    x = np.swapaxes(x, 1, 2)
+    # x contains the list of points at which f should be evaluated (depends on the numerical integration scheme)
+    x = np.tensordot(triangles, SCHEME.points, axes=([1], [0]))  # shape (num_triangles, 2, num_scheme_points)
+    x = np.moveaxis(x, -1, 0)  # reshape to shape (num_scheme_points, num_triangles, 2)
+    x_flat = np.reshape(x, (-1, 2))  # reshape to shape (num_scheme_points * num_triangles, 2)
 
-    return area * np.dot(eta(x), SCHEME.weights)
+    # evaluations of f are reshaped to shape (num_scheme_points, num_triangles,) or
+    # (num_scheme_points, num_triangles, D) if f is vector valued
+    evals_flat = f(x_flat)
+    evals = np.reshape(evals_flat, (num_scheme_points, num_triangles) + evals_flat.shape[1:])
+
+    # weighted sum of the evaluations to get the value of the integral on each triangle
+    weighted_evals = np.tensordot(SCHEME.weights, evals, axes=([0], [0]))
+
+    # a dimension is added to the array of areas if f is vector valued
+    return np.expand_dims(area, tuple(np.arange(1, weighted_evals.ndim))) * weighted_evals
 
 
 def postprocess_indicator(x, grad_mat):
+    """
+
+
+    Parameters
+    ----------
+    x
+    grad_mat
+
+    Returns
+    -------
+
+    """
     res = np.zeros_like(x)
     _, bins = np.histogram(x, bins=2)
+
     i1 = np.where(x < bins[1])
     i2 = np.where(x > bins[1])
+
     mean1 = np.mean(x[i1])
     mean2 = np.mean(x[i2])
 
