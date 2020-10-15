@@ -7,8 +7,8 @@ from pycheeger import compute_cheeger
 
 
 std = 0.2
-coeffs = 0.5 * np.array([1.0, 1.0, -1.1, -0.7])
-means = np.array([[-0.1, -0.4], [0.0, 0.4], [0.15, 0.0], [-0.65, -0.5]])
+coeffs = 0.5 * np.array([1.0, 1.0, -1.1, -0.9])
+means = np.array([0.2, 0.1]) + np.array([[-0.1, -0.3], [0.0, 0.4], [0.2, 0.0], [-0.65, -0.5]])
 
 
 @jit(nopython=True, parallel=True)
@@ -34,7 +34,7 @@ start = time.time()
 
 simple_set, obj_tab, grad_norm_tab = compute_cheeger(eta,
                                                      max_tri_area=0.001, max_primal_dual_iter=20000,
-                                                     step_size=1e-2, convergence_tol=1e-2)
+                                                     step_size=1e-2, convergence_tol=1e-2, plot_results=True)
 
 end = time.time()
 

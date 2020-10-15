@@ -1,11 +1,12 @@
 import numpy as np
 import quadpy
 
-from .tools import winding, integrate_on_triangles, triangulate
+from .tools import winding, resample, integrate_on_triangles, triangulate
+from .plot_utils import plot_simple_set
 
 
 class SimpleSet:
-    def __init__(self, boundary_vertices, max_area=0.002):
+    def __init__(self, boundary_vertices, max_tri_area=0.002):
         self.boundary_vertices = boundary_vertices
         self.num_boundary_vertices = len(boundary_vertices)
         self.boundary_vertices_indices = np.arange(self.num_boundary_vertices)
@@ -18,7 +19,7 @@ class SimpleSet:
         self.mesh_faces = None
         self.boundary_faces_indices = None
 
-        self.mesh(max_area)
+        self.mesh(max_tri_area)
 
     def contains(self, x):
         return winding(x, self.boundary_vertices) != 0
@@ -35,8 +36,12 @@ class SimpleSet:
     def compute_weighted_area(self, f):
         return np.sum(self.compute_weighted_areas(f))
 
-    def mesh(self, max_area):
-        mesh = triangulate(self.boundary_vertices, max_area=max_area)
+    def resample_boundary(self, num_points, max_tri_area):
+        new_boundary_vertices = resample(self.boundary_vertices, num_points)
+        self.__init__(new_boundary_vertices, max_tri_area=max_tri_area)
+
+    def mesh(self, max_tri_area):
+        mesh = triangulate(self.boundary_vertices, max_area=max_tri_area)
 
         self.mesh_vertices = mesh.vertices.copy()
         self.mesh_faces = mesh.faces.copy()
@@ -93,7 +98,7 @@ class SimpleSet:
 
         return gradient1 + gradient2
 
-    def perform_gradient_descent(self, f, step_size, max_iter, eps_stop):
+    def perform_gradient_descent(self, f, step_size, max_iter, eps_stop, num_points, max_tri_area):
         obj_tab = []
         grad_norm_tab = []
 
@@ -142,13 +147,15 @@ class SimpleSet:
 
             convergence = np.linalg.norm(gradient) / self.num_boundary_vertices <= eps_stop
 
-            if n_iter % 100 == 0:
-                self.mesh(0.005)
+            if n_iter % 50 == 0:
+                self.resample_boundary(num_points, max_tri_area)
+                # plot_simple_set(self, eta=f, display_inner_mesh=True)
                 areas = self.compute_weighted_areas(f)
                 area = np.sum(areas)
-                # plot_simple_set(self, f)
+                perimeter = self.compute_perimeter()
+                obj = perimeter / np.abs(area)
 
-        self.mesh(0.005)
+        self.mesh(max_tri_area)
 
         return obj_tab, grad_norm_tab
 

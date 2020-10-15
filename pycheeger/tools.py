@@ -43,6 +43,37 @@ def winding(x, vertices):
     return wn
 
 
+def resample(curve, num_points):
+    """
+    Resample a closed polygonal chain
+
+    Parameters
+    ----------
+    curve : array, shape (N, 2)
+        Curve to be resampled, described by the list of its vertices. The last vertex should not be equal to the first
+        one (the array curve should be a minimal description of the closed polygonal chain)
+    num_points : int
+        Number of vertices of the output curve
+
+    Returns
+    -------
+    array, shape (num_points, 2)
+        Resampled curve
+
+    """
+    periodized_curve = np.concatenate([curve, [curve[0]]])
+
+    # computation of the curvilinear absicssa
+    curvabs = np.concatenate([[0], np.cumsum(np.linalg.norm(periodized_curve[1:] - periodized_curve[:-1], axis=1))])
+    curvabs = curvabs / curvabs[-1]
+
+    # linear interpolation
+    new_x = np.interp(np.arange(num_points) / num_points, curvabs, periodized_curve[:, 0])
+    new_y = np.interp(np.arange(num_points) / num_points, curvabs, periodized_curve[:, 1])
+
+    return np.stack([new_x, new_y], axis=1)
+
+
 def triangulate(vertices, max_area=0.005):
     """
     Triangulate the interior of a closed polygonal curve
@@ -245,26 +276,36 @@ def integrate_on_triangles(f, triangles):
 
 def postprocess_indicator(x, grad_mat):
     """
-
+    Post process a piecewise constant function on a mesh to get an indicator function of a union of cells
 
     Parameters
     ----------
-    x
-    grad_mat
+    x : array, shape (N,)
+        Values describing the piecewise constant function to be processed
+    grad_mat : array, shape (M, N)
+        Matrix representing the linear operator which maps the values describing a piecewise constant function to its
+        jumps on each edge of the mesh
 
     Returns
     -------
+    array, shape (N,)
+        Values of the indicator function on each cell of the mesh
 
     """
     res = np.zeros_like(x)
+
+    # the values of x should concentrate around two values
     _, bins = np.histogram(x, bins=2)
 
+    # find the indices where x is clusters around each of the two values
     i1 = np.where(x < bins[1])
     i2 = np.where(x > bins[1])
 
+    # mean of the values in each cluster
     mean1 = np.mean(x[i1])
     mean2 = np.mean(x[i2])
 
+    # the smallest of the means (in absolute value) is shrinked to zero
     if abs(mean1) < abs(mean2):
         res[i1] = 0
         res[i2] = mean2
@@ -272,25 +313,49 @@ def postprocess_indicator(x, grad_mat):
         res[i2] = 0
         res[i1] = mean1
 
+    # the output indicator function is normalized to have unit total variation
     return res / np.linalg.norm(grad_mat.dot(res), ord=1)
 
 
-def run_primal_dual(mesh, eta, max_iter, grad_mat_norm, verbose=True):
+def run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm, verbose=True):
+    """
+    Solves the "fixed mesh weighted Cheeger problem" by running a primal dual algorithm
+
+    Parameters
+    ----------
+    mesh : CustomMesh
+        Triangle mesh made of N triangles and M edges
+    eta_bar : array, shape (N, 2)
+        Integral of the weight function on each triangle
+    max_iter : integer
+        Maximum number of iterations (for now, exact number of iterations, since no convergence criterion is
+        implemented yet)
+    grad_mat_norm : float
+        Norm of the gradient operator for piecewise constant functions on the mesh
+    verbose
+
+    Returns
+    -------
+    array, shape (N, 2)
+        Values describing a piecewise constant function on the mesh, which solves the fixed mesh weighted Cheeger problem
+
+    """
     sigma = 0.99 / grad_mat_norm
     tau = 0.99 / grad_mat_norm
 
-    phi = np.zeros(mesh.num_edges)
-    u = np.zeros(mesh.num_faces)
+    phi = np.zeros(mesh.num_edges)  # dual variable
+    u = np.zeros(mesh.num_faces)  # primal variable
     former_u = u
 
     for _ in range(max_iter):
         phi = prox_inf_norm(phi + sigma * mesh.grad_mat.dot(2 * u - former_u), sigma)
 
         former_u = u
-        u = prox_dot_prod(u - tau * mesh.grad_mat.T.dot(phi), tau, eta)
+        u = prox_dot_prod(u - tau * mesh.grad_mat.T.dot(phi), tau, eta_bar)
 
     if verbose:
         print(np.linalg.norm(u - former_u) / np.linalg.norm(u))
         print(np.linalg.norm(mesh.grad_mat.dot(u), ord=1))
 
+    # the output is post processed so that it is an indicator function and has exactly unit total variation
     return postprocess_indicator(u, mesh.grad_mat)

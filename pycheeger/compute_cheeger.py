@@ -9,7 +9,7 @@ from .plot_utils import plot_primal_dual_results, plot_simple_set
 
 
 def compute_cheeger(eta, max_tri_area=0.002, max_primal_dual_iter=10000,
-                    step_size=1e-2, max_iter=500, convergence_tol=1e-4, plot_results=False):
+                    step_size=1e-2, max_iter=500, convergence_tol=1e-4, plot_results=False, num_points=50):
 
     vertices = np.array([[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]])
     raw_mesh = triangulate(vertices, max_area=max_tri_area)
@@ -29,9 +29,10 @@ def compute_cheeger(eta, max_tri_area=0.002, max_primal_dual_iter=10000,
     boundary_vertices = mesh.vertices[boundary_vertices_index][::2]
     simple_set = SimpleSet(boundary_vertices)
 
-    obj_tab, grad_norm_tab = simple_set.perform_gradient_descent(eta, step_size, max_iter, convergence_tol)
+    obj_tab, grad_norm_tab = simple_set.perform_gradient_descent(eta, step_size, max_iter, convergence_tol,
+                                                                 num_points, 0.004)
 
     if plot_results:
-        plot_simple_set(simple_set, eta, display_inner_mesh=True)
+        plot_simple_set(simple_set, eta=eta, display_inner_mesh=False)
 
     return simple_set, obj_tab, grad_norm_tab

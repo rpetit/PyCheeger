@@ -56,6 +56,7 @@ def plot_simple_set(simple_set, eta=None, display_inner_mesh=False, boundary_col
         ax.triplot(triangulation, color='black', alpha=0.3)
 
     ax.axis('equal')
+    ax.axis('off')
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
     plt.show()
@@ -71,6 +72,7 @@ def plot_simple_functions(u1, u2, display_inner_mesh=False, boundary_color='blac
         else:
             u = u2
             color = 'red'
+            boundary_color = 'red'
 
         for atom in u.atoms:
             simple_set = atom.support
@@ -88,6 +90,7 @@ def plot_simple_functions(u1, u2, display_inner_mesh=False, boundary_color='blac
                 ax.triplot(triangulation, color=color, alpha=0.3)
 
     ax.axis('equal')
+    ax.axis('off')
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
     plt.show()
