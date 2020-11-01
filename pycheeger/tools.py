@@ -207,7 +207,7 @@ def prox_inf_norm(x, tau):
 
     Notes
     -----
-    .. math:: prox_{\tau ||.||_{\infty}}(x) = x - \tau \text{proj}_{\{||.||_{\infty}\leq 1\}}(x / \tau)
+    .. math:: prox_{\\tau \\, ||.||_{\\infty}}(x) = x - \\tau ~ \\text{proj}_{\\{||.||_{\\infty}\\leq 1\\}}(x / \\tau)
 
     """
     return x - tau * proj_unit_l1_ball(x / tau)
