@@ -2,7 +2,7 @@ import numpy as np
 
 from scipy.sparse.linalg import svds
 
-from .mesh import CustomMesh
+from .mesh import Mesh
 from .simple_set import SimpleSet
 from .tools import triangulate, run_primal_dual
 from .plot_utils import plot_primal_dual_results, plot_simple_set
@@ -13,7 +13,7 @@ def compute_cheeger(eta, max_tri_area=0.002, max_primal_dual_iter=10000,
 
     vertices = np.array([[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]])
     raw_mesh = triangulate(vertices, max_area=max_tri_area)
-    mesh = CustomMesh(raw_mesh.vertices, raw_mesh.faces)
+    mesh = Mesh(raw_mesh.vertices, raw_mesh.faces)
 
     eta_bar = mesh.integrate(eta)
 
@@ -26,11 +26,11 @@ def compute_cheeger(eta, max_tri_area=0.002, max_primal_dual_iter=10000,
         plot_primal_dual_results(mesh, u, eta_bar)
 
     boundary_vertices_index, boundary_edges_index = mesh.find_path(np.where(np.abs(mesh.grad_mat.dot(u)) > 0)[0])
-    boundary_vertices = mesh.vertices[boundary_vertices_index][::2]
+    boundary_vertices = mesh.vertices[boundary_vertices_index][::10]
     simple_set = SimpleSet(boundary_vertices)
 
     obj_tab, grad_norm_tab = simple_set.perform_gradient_descent(eta, step_size, max_iter, convergence_tol,
-                                                                 num_points, 0.004)
+                                                                 len(boundary_vertices), 0.004)
 
     if plot_results:
         plot_simple_set(simple_set, eta=eta, display_inner_mesh=False)

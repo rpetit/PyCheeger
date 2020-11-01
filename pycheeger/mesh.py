@@ -1,29 +1,64 @@
 import numpy as np
 
 from scipy.sparse import csr_matrix
-
-from pymesh import form_mesh, mesh_to_graph
 from .tools import integrate_on_triangles
 
 
-class CustomMesh:
-    def __init__(self, vertices, faces):
-        self.vertices = vertices
-        self.faces = faces
+class Mesh:
+    """
+    Custom mesh class
 
-        self.raw_mesh = form_mesh(vertices, faces)
+    Attributes
+    ----------
+    vertices : array, shape (N, 2)
+        Each row contains the two coordinates of a vertex
+    faces : array, shape (M, 3)
+        Each row contains the three indices of the face's vertices. For convenience reasons, the values in each row are
+        sorted, i.e. the face whose vertices have indices 0, 1, 2 will always be stored as [0, 1, 2] (and not [1, 0, 2])
+    edges : array, shape (K, 2)
+        Each row contains the two indices of the edge's vertices. For convenience reasons, the values in each row are
+        sorted, i.e. the edge whose vertices have indices 0, 1 will always be stored as [0, 1] (and not [1, 0])
+    num_edges : int
+        Equals K
+    num_faces : int
+        Equals M
+    num_vertices : int
+        Equals N
+    grad_mat : scipy.sparse.csr_matrix
+        Linear operator mapping a vector of length M (the values taken by a piecewise constant function on the mesh) to
+        a vector of length K (the jumps / values taken by the gradient on each edge of the mesh)
 
-        _, edges = mesh_to_graph(self.raw_mesh)
-        self.edges = edges
+    """
+    def __init__(self, raw_mesh):
+        self.vertices = raw_mesh['vertices']
+        self.faces = np.sort(raw_mesh['triangles'], axis=1)
+        self.edges = np.sort(raw_mesh['edges'], axis=1)
 
-        self.num_edges = len(edges)
-        self.num_faces = len(faces)
-        self.num_vertices = len(vertices)
+        self.num_edges = len(self.edges)
+        self.num_faces = len(self.faces)
+        self.num_vertices = len(self.vertices)
 
-        self.grad_mat = None
+        # self.grad_mat = self.build_grad_matrix()
 
     def get_edge_index(self, edge):
-        where_edge = np.where(np.all(self.edges == edge, axis=1))[0]
+        """
+        Find the index of an edge given by its two vertices in the array of edges
+
+        Parameters
+        ----------
+        edge : array, shape (2,)
+            Array containing two integers, which are the indices of the edge's vertices. Does not need to be sorted.
+
+        Returns
+        -------
+        int
+            The index of the input edge (raises an error if the edge is not found or found multiple times)
+
+        """
+        # each row of self.edges is sorted
+        sorted_edge = np.sort(edge)
+
+        where_edge = np.where(np.all(self.edges == sorted_edge, axis=1))[0]
 
         if len(where_edge) == 0:
             raise ValueError("edge not found")
@@ -33,25 +68,62 @@ class CustomMesh:
             return where_edge[0]
 
     def get_edge_adjacent_faces(self, edge):
-        self.raw_mesh.enable_connectivity()
+        """
+        Find the index of all faces to which a given edge belongs
 
-        v1_adjacent_faces = self.raw_mesh.get_vertex_adjacent_faces(edge[0])
-        v2_adjacent_faces = self.raw_mesh.get_vertex_adjacent_faces(edge[1])
+        Parameters
+        ----------
+        edge : array, shape (2,)
+            Array containing two integers, which are the indices of the edge's vertices. Does not need to be sorted.
+
+        Returns
+        -------
+        array
+            One dimensional integer valued array containing the indices of the relevant faces
+
+        """
+        v1_adjacent_faces = np.where(np.any(np.isin(self.faces, edge[0]), axis=1))[0]
+        v2_adjacent_faces = np.where(np.any(np.isin(self.faces, edge[1]), axis=1))[0]
 
         edge_adjacent_faces = np.intersect1d(v1_adjacent_faces, v2_adjacent_faces)
 
         return edge_adjacent_faces
 
     def get_orientation(self, face_index, edge):
-        self.raw_mesh.add_attribute("face_centroid")
+        """
+        The orientation of an edge with respect to a face is defined as +1 if the normal is the outward normal and -1
+        otherwise. The normal is computed by applying a counter clockwise rotation to the edge vector, which is himself
+        given by v2 - v1 where v1 and v2 are the two vertices of the edge, and the index of v1 in self.vertices is
+        smaller than the one of v2 (edges are always stored sorted). This definition of the orientation is of course
+        arbitrary, but the only thing we need is to keep one that is consistent all along.
 
-        face_centroid = self.raw_mesh.get_face_attribute("face_centroid")[face_index]
+        Parameters
+        ----------
+        face_index : int
+            Index of the face in self.faces
+        edge : array, shape (2,)
+            Array containing two integers, which are the indices of the edge's vertices. Does not need to be sorted.
 
-        v1, v2 = self.vertices[edge[0]], self.vertices[edge[1]]
+
+        Returns
+        -------
+        int
+            +1 or -1 if the input face contains the input edge (see the explanations above), and 0 otherwise
+
+        """
+        if face_index not in self.get_edge_adjacent_faces(edge):
+            return 0
+
+        face_centroid = np.sum(self.vertices[self.faces[face_index]], axis=0) / 3
+
+        sorted_edge = np.sort(edge)
+
+        v1, v2 = self.vertices[sorted_edge[0]], self.vertices[sorted_edge[1]]
         edge_center = (v1 + v2) / 2
         edge_vector = v2 - v1
-        edge_normal = np.array([-edge_vector[1], edge_vector[0]])
+        edge_normal = np.array([-edge_vector[1], edge_vector[0]])  # counter clockwise rotation of the edge vector
 
+        # the sign of this inner product indicates whether the normal is the outward or the inward normal
         if np.dot(edge_center - face_centroid, edge_normal) >= 0:
             return 1
         else:
@@ -92,7 +164,7 @@ class CustomMesh:
                 indices.append(face_index)
                 data.append(-self.get_orientation(face_index, edge) * edge_length)
 
-        self.grad_mat = csr_matrix((data, indices, indptr))
+        return csr_matrix((data, indices, indptr))
 
     def integrate(self, eta):
         return integrate_on_triangles(eta, self.vertices[self.faces])

@@ -1,14 +1,17 @@
 import numpy as np
 import quadpy
+import triangle
+
+import matplotlib.pyplot as plt
 
 from numba import jit, prange
-from pymesh import triangle
 
 
 @jit(nopython=True, parallel=True)
 def winding(x, vertices):
     """
-    Compute the winding number of a closed polygonal curve described by its vertices around the point x
+    Compute the winding number of a closed polygonal curve described by its vertices around the point x. This number is
+    zero if and only if x is outside the polygon.
 
     Parameters
     ----------
@@ -51,7 +54,7 @@ def resample(curve, num_points):
     ----------
     curve : array, shape (N, 2)
         Curve to be resampled, described by the list of its vertices. The last vertex should not be equal to the first
-        one (the array curve should be a minimal description of the closed polygonal chain)
+        one (the input array should be a minimal description of the closed polygonal chain)
     num_points : int
         Number of vertices of the output curve
 
@@ -74,36 +77,40 @@ def resample(curve, num_points):
     return np.stack([new_x, new_y], axis=1)
 
 
-def triangulate(vertices, max_area=0.005):
+def triangulate(vertices, max_triangle_area=None, plot_result=False):
     """
-    Triangulate the interior of a closed polygonal curve
+    Triangulate the interior of a closed polygonal curve using the triangle library (Python wrapper around Shewchuk's
+    Triangle mesh generator)
 
     Parameters
     ----------
     vertices : array, shape (N, 2)
         Coordinates of the curve's vertices
-    max_area : float
-        Maximum triangle area, see pymesh.triangle
+    max_triangle_area : float
+        Maximum area allowed for triangles, see Shewchuk's Triangle mesh generator
+    plot_result : bool
+        If True, the resulting triangulation is shown along with the input
 
     Returns
     -------
-    raw_mesh : pymesh.Mesh
-        Output mesh, see pymesh.triangle and pymesh.Mesh
+    raw_mesh : dict
+        Output mesh, see the documentation of the triangle library
 
     """
-    tri = triangle()
+    # vertices and segments define a planar straight line graph (vertices are assumed to be given ordered)
+    segments = np.array([[i, (i + 1) % len(vertices)] for i in range(len(vertices))])
+    triangle_input = dict(vertices=vertices, segments=segments)
 
-    # points and segments define a planar straight line graph (vertices are assumed to be given ordered)
-    tri.points = vertices
-    tri.segments = np.array([[i, (i+1) % len(vertices)] for i in range(len(vertices))])
+    if max_triangle_area is None:
+        opts = 'qpe'
+    else:
+        opts = 'qpa{}e'.format(max_triangle_area)
 
-    tri.max_area = max_area
+    raw_mesh = triangle.triangulate(triangle_input, opts)
 
-    tri.split_boundary = True
-    tri.verbosity = 0
-    tri.run()
-
-    raw_mesh = tri.mesh
+    if plot_result:
+        triangle.compare(plt, triangle_input, raw_mesh)
+        plt.show()
 
     return raw_mesh
 
@@ -244,6 +251,11 @@ def integrate_on_triangles(f, triangles):
         Value computed for the integral of f on each of the N triangles (if f takes values in dimension D, the shape of
         the resulting array is (N, D))
 
+    Notes
+    -----
+    Here, quadpy is only used to extract the scheme's characteristics, in order to speed up computations (in quadpy,
+    the code handles arbitrary dimensions and is too generic)
+
     """
     num_triangles = len(triangles)
     num_scheme_points = SCHEME.points.shape[1]
@@ -323,7 +335,7 @@ def run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm, verbose=True):
 
     Parameters
     ----------
-    mesh : CustomMesh
+    mesh : Mesh
         Triangle mesh made of N triangles and M edges
     eta_bar : array, shape (N, 2)
         Integral of the weight function on each triangle

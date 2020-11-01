@@ -157,6 +157,8 @@ class SimpleSet:
 
         self.mesh(max_tri_area)
 
+        print(n_iter)
+
         return obj_tab, grad_norm_tab
 
 
