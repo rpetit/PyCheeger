@@ -28,8 +28,8 @@ jobs:
           make -C docs html
       - name: Deploy doc to github pages
         uses: JamesIves/github-pages-deploy-action@3.7.1
-          with:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            BRANCH: gh-pages # The branch the action should deploy to.
-            FOLDER: ./docs/_build/html # The folder the action should deploy.
-            CLEAN: true # Automatically remove deleted files from the deploy branch
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: ./docs/_build/html # The folder the action should deploy.
+          CLEAN: true # Automatically remove deleted files from the deploy branch
