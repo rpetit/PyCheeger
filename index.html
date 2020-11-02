@@ -30,6 +30,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -149,8 +150,237 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="pycheeger">
-<h1>PyCheeger<a class="headerlink" href="#pycheeger" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pycheeger.tools">
+<span id="pycheeger"></span><h1>PyCheeger<a class="headerlink" href="#module-pycheeger.tools" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="pycheeger.tools.find_threshold">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">find_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.find_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the value of the Lagrange multiplier involved in the projection of x into the unit l1 ball</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>,</em><em>)</em>) – Vector to be projected</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>res</strong> – Value of the Lagrange multiplier</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Sorting based algorithm. See <a href="#id5"><span class="problematic" id="id1">[1]_</span></a> for a detailed explanation of the computations and alternative algorithms.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets">1</span></dt>
+<dd><p>L. Condat, <em>Fast Projection onto the Simplex and the l1 Ball</em>, Mathematical Programming,
+Series A, Springer, 2016, 158 (1), pp.575-585.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.tools.integrate_on_triangles">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">integrate_on_triangles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em>, <em class="sig-param"><span class="n">triangles</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.integrate_on_triangles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numerical integration of f on a list of triangles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> (<em>function</em>) – Function to be integrated. f must handle array inputs with shape (N, 2). It can be vector valued</p></li>
+<li><p><strong>triangles</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>, </em><em>3</em><em>, </em><em>2</em><em>)</em>) – triangles[i, j] contains the coordinates of the j-th vertex of the i-th triangle</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value computed for the integral of f on each of the N triangles (if f takes values in dimension D, the shape of
+the resulting array is (N, D))</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (N,) or (N, D)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Here, quadpy is only used to extract the scheme’s characteristics, in order to speed up computations (in quadpy,
+the code handles arbitrary dimensions and is too generic)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.tools.postprocess_indicator">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">postprocess_indicator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">grad_mat</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.postprocess_indicator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post process a piecewise constant function on a mesh to get an indicator function of a union of cells</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>,</em><em>)</em>) – Values describing the piecewise constant function to be processed</p></li>
+<li><p><strong>grad_mat</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>M</em><em>, </em><em>N</em><em>)</em>) – Matrix representing the linear operator which maps the values describing a piecewise constant function to its
+jumps on each edge of the mesh</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Values of the indicator function on each cell of the mesh</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (N,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.tools.proj_unit_l1_ball">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">proj_unit_l1_ball</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.proj_unit_l1_ball" title="Permalink to this definition">¶</a></dt>
+<dd><p>Projection onto the l1 unit ball</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>,</em><em>)</em>) – Vector to be projected</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>res</strong> – Projection</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (N,)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>See <a href="#id6"><span class="problematic" id="id3">[1]_</span></a> for a detailed explanation of the computations and alternative algorithms.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets">1</span></dt>
+<dd><p>L. Condat, <em>Fast Projection onto the Simplex and the l1 Ball</em>, Mathematical Programming,
+Series A, Springer, 2016, 158 (1), pp.575-585.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.tools.prox_dot_prod">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">prox_dot_prod</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">tau</span></em>, <em class="sig-param"><span class="n">a</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.prox_dot_prod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Proximal map of the inner product between x and a</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>,</em><em>)</em>) – </p></li>
+<li><p><strong>tau</strong> (<em>float</em>) – </p></li>
+<li><p><strong>a</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>,</em><em>)</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (N,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.tools.prox_inf_norm">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">prox_inf_norm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">tau</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.prox_inf_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Proximal map of the l-infinity norm</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>,</em><em>)</em>) – </p></li>
+<li><p><strong>tau</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (N,)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<div class="math notranslate nohighlight">
+\[prox_{\tau \, ||.||_{\infty}}(x) = x - \tau ~ \text{proj}_{\{||.||_{\infty}\leq 1\}}(x / \tau)\]</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.tools.resample">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">curve</span></em>, <em class="sig-param"><span class="n">num_points</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample a closed polygonal chain</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>curve</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>, </em><em>2</em><em>)</em>) – Curve to be resampled, described by the list of its vertices. The last vertex should not be equal to the first
+one (the input array should be a minimal description of the closed polygonal chain)</p></li>
+<li><p><strong>num_points</strong> (<em>int</em>) – Number of vertices of the output curve</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Resampled curve</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (num_points, 2)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.tools.run_primal_dual">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">run_primal_dual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mesh</span></em>, <em class="sig-param"><span class="n">eta_bar</span></em>, <em class="sig-param"><span class="n">max_iter</span></em>, <em class="sig-param"><span class="n">grad_mat_norm</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.run_primal_dual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the “fixed mesh weighted Cheeger problem” by running a primal dual algorithm</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh</strong> (<em>Mesh</em>) – Triangle mesh made of N triangles and M edges</p></li>
+<li><p><strong>eta_bar</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>, </em><em>2</em><em>)</em>) – Integral of the weight function on each triangle</p></li>
+<li><p><strong>max_iter</strong> (<em>integer</em>) – Maximum number of iterations (for now, exact number of iterations, since no convergence criterion is
+implemented yet)</p></li>
+<li><p><strong>grad_mat_norm</strong> (<em>float</em>) – Norm of the gradient operator for piecewise constant functions on the mesh</p></li>
+<li><p><strong>verbose</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Values describing a piecewise constant function on the mesh, which solves the fixed mesh weighted Cheeger problem</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (N, 2)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.tools.triangulate">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">triangulate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertices</span></em>, <em class="sig-param"><span class="n">max_triangle_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">plot_result</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.triangulate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Triangulate the interior of a closed polygonal curve using the triangle library (Python wrapper around Shewchuk’s
+Triangle mesh generator)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vertices</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>, </em><em>2</em><em>)</em>) – Coordinates of the curve’s vertices</p></li>
+<li><p><strong>max_triangle_area</strong> (<em>float</em>) – Maximum area allowed for triangles, see Shewchuk’s Triangle mesh generator</p></li>
+<li><p><strong>plot_result</strong> (<em>bool</em>) – If True, the resulting triangulation is shown along with the input</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>raw_mesh</strong> – Output mesh, see the documentation of the triangle library</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.tools.winding">
+<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">winding</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">vertices</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.winding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the winding number of a closed polygonal curve described by its vertices around the point x. This number is
+zero if and only if x is outside the polygon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>2</em><em>,</em><em>)</em>) – Point around which the winding number is computed</p></li>
+<li><p><strong>vertices</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>, </em><em>2</em><em>)</em>) – Coordinates of the curve’s vertices</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>wn</strong> – The winding number</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
 <div class="toctree-wrapper compound">
 </div>
 </div>
