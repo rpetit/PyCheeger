@@ -21,7 +21,7 @@ jobs:
           pip install -r requirements.txt
       - name: Test with pytest
         run: |
-          pytest
+          python -m pytest
       - name: Build doc with sphinx
         run: |
           make -C docs clean
