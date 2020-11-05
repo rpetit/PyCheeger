@@ -84,7 +84,6 @@
               <!-- Local TOC -->
               <div class="local-toc"><ul>
 <li><a class="reference internal" href="#">PyCheeger</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 </div>
             
@@ -150,9 +149,263 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pycheeger.tools">
-<span id="pycheeger"></span><h1>PyCheeger<a class="headerlink" href="#module-pycheeger.tools" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pycheeger.compute_cheeger">
+<span id="pycheeger"></span><h1>PyCheeger<a class="headerlink" href="#module-pycheeger.compute_cheeger" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
+<dt id="pycheeger.compute_cheeger.compute_cheeger">
+<code class="sig-prename descclassname">pycheeger.compute_cheeger.</code><code class="sig-name descname">compute_cheeger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">eta</span></em>, <em class="sig-param"><span class="n">max_tri_area_fm</span><span class="o">=</span><span class="default_value">0.002</span></em>, <em class="sig-param"><span class="n">max_iter_fm</span><span class="o">=</span><span class="default_value">10000.0</span></em>, <em class="sig-param"><span class="n">plot_results_fm</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_boundary_vertices_ld</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">max_tri_area_ld</span><span class="o">=</span><span class="default_value">0.005</span></em>, <em class="sig-param"><span class="n">step_size_ld</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">max_iter_ld</span><span class="o">=</span><span class="default_value">500</span></em>, <em class="sig-param"><span class="n">convergence_tol_ld</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">plot_results_ld</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.compute_cheeger.compute_cheeger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Cheeger set associated to the weight function eta</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>eta</strong> (<em>function</em>) – Function to be integrated. f must handle array inputs with shape (N, 2)</p></li>
+<li><p><strong>max_tri_area_fm</strong> (<em>float</em>) – Fixed mesh step parameter. Maximum triangle area allowed for the domain mesh</p></li>
+<li><p><strong>max_iter_fm</strong> (<em>int</em>) – Fixed mesh step parameter. Maximum number of iterations for the primal dual algorithm</p></li>
+<li><p><strong>plot_results_fm</strong> (<em>bool</em>) – Fixed mesh step parameter. Whether to plot the results of the fixed mesh step or not</p></li>
+<li><p><strong>num_boundary_vertices_ld</strong> (<em>int</em>) – Local descent step parameter. Number of boundary vertices used to represent the simple set</p></li>
+<li><p><strong>max_tri_area_ld</strong> (<em>float</em>) – Local descent step parameter. Maximum triangle area allowed for the inner mesh of the simple set</p></li>
+<li><p><strong>step_size_ld</strong> (<em>float</em>) – Local descent step parameter. Step size used in the local descent</p></li>
+<li><p><strong>max_iter_ld</strong> (<em>int</em>) – Local descent step parameter. Maximum number of iterations allowed for the local descent</p></li>
+<li><p><strong>convergence_tol_ld</strong> (<em>float</em>) – Local descent step parameter. Convergence tol for the local descent</p></li>
+<li><p><strong>plot_results_ld</strong> (<em>bool</em>) – Local descent step parameter. Whether to plot the results of the local descent step or not</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-pycheeger.mesh"></span><dl class="py class">
+<dt id="pycheeger.mesh.Mesh">
+<em class="property">class </em><code class="sig-prename descclassname">pycheeger.mesh.</code><code class="sig-name descname">Mesh</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raw_mesh</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom mesh class</p>
+<dl class="py attribute">
+<dt id="pycheeger.mesh.Mesh.vertices">
+<code class="sig-name descname">vertices</code><a class="headerlink" href="#pycheeger.mesh.Mesh.vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each row contains the two coordinates of a vertex</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array, shape (N, 2)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.mesh.Mesh.faces">
+<code class="sig-name descname">faces</code><a class="headerlink" href="#pycheeger.mesh.Mesh.faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each row contains the three indices of the face’s vertices. For convenience reasons, the values in each row are
+sorted, i.e. the face whose vertices have indices 0, 1, 2 will always be stored as [0, 1, 2] (and not [1, 0, 2])</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array, shape (M, 3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.mesh.Mesh.edges">
+<code class="sig-name descname">edges</code><a class="headerlink" href="#pycheeger.mesh.Mesh.edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each row contains the two indices of the edge’s vertices. For convenience reasons, the values in each row are
+sorted, i.e. the edge whose vertices have indices 0, 1 will always be stored as [0, 1] (and not [1, 0])</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array, shape (K, 2)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.mesh.Mesh.num_edges">
+<code class="sig-name descname">num_edges</code><a class="headerlink" href="#pycheeger.mesh.Mesh.num_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equals K</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.mesh.Mesh.num_faces">
+<code class="sig-name descname">num_faces</code><a class="headerlink" href="#pycheeger.mesh.Mesh.num_faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equals M</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.mesh.Mesh.num_vertices">
+<code class="sig-name descname">num_vertices</code><a class="headerlink" href="#pycheeger.mesh.Mesh.num_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equals N</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.mesh.Mesh.grad_mat">
+<code class="sig-name descname">grad_mat</code><a class="headerlink" href="#pycheeger.mesh.Mesh.grad_mat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear operator mapping a vector of length M (the values taken by a piecewise constant function on the mesh) to
+a vector of length K (the jumps / values taken by the gradient on each edge of the mesh)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>scipy.sparse.csr_matrix</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.mesh.Mesh.build_grad_matrix">
+<code class="sig-name descname">build_grad_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.build_grad_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the gradient matrix associated to the mesh</p>
+<p>The gradient is the linear operator mapping a vector of length M (the values taken by a piecewise constant
+function on the mesh) to a vector of length K (the jumps / values taken by the gradient on each edge of the
+mesh), M being the number of faces in the mesh, and K being the number of edges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The gradient matrix</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>scipy.sparse.csr_matrix</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.mesh.Mesh.get_edge_adjacent_faces">
+<code class="sig-name descname">get_edge_adjacent_faces</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_edge_adjacent_faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the index of all faces to which a given edge belongs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>edge</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>2</em><em>,</em><em>)</em>) – Array containing two integers, which are the indices of the edge’s vertices. Does not need to be sorted.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>One dimensional integer valued array containing the indices of the relevant faces</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.mesh.Mesh.get_edge_index">
+<code class="sig-name descname">get_edge_index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_edge_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the index of an edge given by its two vertices in the array of edges</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>edge</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>2</em><em>,</em><em>)</em>) – Array containing two integers, which are the indices of the edge’s vertices. Does not need to be sorted.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The index of the input edge (raises an error if the edge is not found or found multiple times)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.mesh.Mesh.get_edge_length">
+<code class="sig-name descname">get_edge_length</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_edge_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the euclidean distance between the two vertices of an edge</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>edge</strong> (<em>array</em><em>, </em><em>shape</em><em>(</em><em>2</em><em>,</em><em>)</em>) – Array containing two integers, which are the indices of the edge’s vertices. Does not need to be sorted.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The length of the edge</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.mesh.Mesh.get_face_area">
+<code class="sig-name descname">get_face_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">face_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_face_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the area of a face</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>face_index</strong> (<em>int</em>) – Index of the face in self.faces</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Area of the input face</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.mesh.Mesh.get_face_edges">
+<code class="sig-name descname">get_face_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">face_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_face_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of edges which belong to a given face</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>face_index</strong> (<em>int</em>) – The index of the face in self.faces</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Each row contains the two indices of an edge’s vertices (sorted).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (3, 2)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.mesh.Mesh.get_orientation">
+<code class="sig-name descname">get_orientation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">face_index</span></em>, <em class="sig-param"><span class="n">edge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_orientation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the orientation of an edge with respect to a given face.</p>
+<p>The orientation of an edge with respect to a face is defined as +1 if the normal is the outward normal and -1
+otherwise. The normal is computed by applying a counter clockwise rotation to the edge vector, which is himself
+given by v2 - v1 where v1 and v2 are the two vertices of the edge, and the index of v1 in self.vertices is
+smaller than the one of v2 (edges are always stored sorted). This definition of the orientation is of course
+arbitrary, but the only thing we need is to keep one that is consistent all along.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>face_index</strong> (<em>int</em>) – Index of the face in self.faces</p></li>
+<li><p><strong>edge</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>2</em><em>,</em><em>)</em>) – Array containing two integers, which are the indices of the edge’s vertices. Does not need to be sorted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>+1 or -1 if the input face contains the input edge (see the explanations above), and 0 otherwise</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.mesh.Mesh.integrate">
+<code class="sig-name descname">integrate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.integrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the integral of a given function on each face of the mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> (<em>function</em>) – Function to be integrated. f must handle array inputs with shape (N, 2), N being the number of faces of the
+mesh. It can be vector valued</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value computed for the integral of f on each of the N triangles (if f takes values in dimension D, the shape
+of the resulting array is (N, D))</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (N,) or (N, D)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-pycheeger.tools"></span><dl class="py function">
 <dt id="pycheeger.tools.find_threshold">
 <code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">find_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.find_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the value of the Lagrange multiplier involved in the projection of x into the unit l1 ball</p>
@@ -321,7 +574,7 @@ one (the input array should be a minimal description of the closed polygonal cha
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mesh</strong> (<em>Mesh</em>) – Triangle mesh made of N triangles and M edges</p></li>
+<li><p><strong>mesh</strong> (<a class="reference internal" href="#pycheeger.mesh.Mesh" title="pycheeger.mesh.Mesh"><em>Mesh</em></a>) – Triangle mesh made of N triangles and M edges</p></li>
 <li><p><strong>eta_bar</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>, </em><em>2</em><em>)</em>) – Integral of the weight function on each triangle</p></li>
 <li><p><strong>max_iter</strong> (<em>integer</em>) – Maximum number of iterations (for now, exact number of iterations, since no convergence criterion is
 implemented yet)</p></li>
@@ -381,16 +634,6 @@ zero if and only if x is outside the polygon.</p>
 </dl>
 </dd></dl>
 
-<div class="toctree-wrapper compound">
-</div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
 </div>
 
 
