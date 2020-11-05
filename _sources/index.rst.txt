@@ -8,4 +8,4 @@ PyCheeger
     :members:
 
 .. automodule:: pycheeger.tools
-   :members:
+    :members:
