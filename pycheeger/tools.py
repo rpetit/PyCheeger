@@ -77,7 +77,7 @@ def resample(curve, num_points):
     return np.stack([new_x, new_y], axis=1)
 
 
-def triangulate(vertices, max_triangle_area=None, plot_result=False):
+def triangulate(vertices, max_triangle_area=None, split_boundary=False, plot_result=False):
     """
     Triangulate the interior of a closed polygonal curve using the triangle library (Python wrapper around Shewchuk's
     Triangle mesh generator)
@@ -86,10 +86,12 @@ def triangulate(vertices, max_triangle_area=None, plot_result=False):
     ----------
     vertices : array, shape (N, 2)
         Coordinates of the curve's vertices
-    max_triangle_area : float
-        Maximum area allowed for triangles, see Shewchuk's Triangle mesh generator
+    max_triangle_area : None or float
+        Maximum area allowed for triangles, see Shewchuk's Triangle mesh generator, defaut None (no constraint)
+    split_boundary : bool
+        Whether to allow boundary segments to be splitted or not, defaut False
     plot_result : bool
-        If True, the resulting triangulation is shown along with the input
+        If True, the resulting triangulation is shown along with the input, defaut False
 
     Returns
     -------
@@ -101,10 +103,13 @@ def triangulate(vertices, max_triangle_area=None, plot_result=False):
     segments = np.array([[i, (i + 1) % len(vertices)] for i in range(len(vertices))])
     triangle_input = dict(vertices=vertices, segments=segments)
 
-    if max_triangle_area is None:
-        opts = 'qpe'
-    else:
-        opts = 'qpa{}e'.format(max_triangle_area)
+    opts = 'qpe'
+
+    if max_triangle_area is not None:
+        opts = opts + 'a{}'.format(max_triangle_area)
+
+    if not split_boundary:
+        opts = opts + 'Y'
 
     raw_mesh = triangle.triangulate(triangle_input, opts)
 
@@ -329,7 +334,7 @@ def postprocess_indicator(x, grad_mat):
     return res / np.linalg.norm(grad_mat.dot(res), ord=1)
 
 
-def run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm, verbose=True):
+def run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm, verbose=False):
     """
     Solves the "fixed mesh weighted Cheeger problem" by running a primal dual algorithm
 
@@ -344,7 +349,8 @@ def run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm, verbose=True):
         implemented yet)
     grad_mat_norm : float
         Norm of the gradient operator for piecewise constant functions on the mesh
-    verbose
+    verbose : bool, defaut False
+        Whether to print some information at the end of the algorithm or not
 
     Returns
     -------

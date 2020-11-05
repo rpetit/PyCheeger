@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 
 from math import exp
 from numba import jit, prange
@@ -33,8 +34,18 @@ def eta(x):
 start = time.time()
 
 simple_set, obj_tab, grad_norm_tab = compute_cheeger(eta,
-                                                     max_tri_area=0.001, max_primal_dual_iter=20000,
-                                                     step_size=1e-2, convergence_tol=1e-2, plot_results=True)
+                                                     max_tri_area_fm=1e-3, max_iter_fm=20000, plot_results_fm=True,
+                                                     num_boundary_vertices_ld=75, max_tri_area_ld=1e-2,
+                                                     step_size_ld=1e-4, max_iter_ld=2000, convergence_tol_ld=1e-3,
+                                                     num_iter_resampling_ld=10, plot_results_ld=True)
+
+plt.plot(obj_tab)
+plt.show()
+
+plt.plot(grad_norm_tab)
+plt.show()
+
+print(grad_norm_tab[-1])
 
 end = time.time()
 
