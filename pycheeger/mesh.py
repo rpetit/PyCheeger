@@ -38,7 +38,7 @@ class Mesh:
         self.num_faces = len(self.faces)
         self.num_vertices = len(self.vertices)
 
-        # self.grad_mat = self.build_grad_matrix()
+        self.grad_mat = self.build_grad_matrix()
 
     def get_edge_index(self, edge):
         """
@@ -91,6 +91,8 @@ class Mesh:
 
     def get_orientation(self, face_index, edge):
         """
+        Compute the orientation of an edge with respect to a given face.
+
         The orientation of an edge with respect to a face is defined as +1 if the normal is the outward normal and -1
         otherwise. The normal is computed by applying a counter clockwise rotation to the edge vector, which is himself
         given by v2 - v1 where v1 and v2 are the two vertices of the edge, and the index of v1 in self.vertices is
@@ -103,7 +105,6 @@ class Mesh:
             Index of the face in self.faces
         edge : array, shape (2,)
             Array containing two integers, which are the indices of the edge's vertices. Does not need to be sorted.
-
 
         Returns
         -------
@@ -130,25 +131,85 @@ class Mesh:
             return -1
 
     def get_edge_length(self, edge):
+        """
+        Compute the euclidean distance between the two vertices of an edge
+
+        Parameters
+        ----------
+        edge : array, shape(2,)
+            Array containing two integers, which are the indices of the edge's vertices. Does not need to be sorted.
+
+        Returns
+        -------
+        float
+            The length of the edge
+
+        """
         v1, v2 = self.vertices[edge[0]], self.vertices[edge[1]]
         return np.linalg.norm(v2 - v1)
 
     def get_face_edges(self, face_index):
+        """
+        Get the list of edges which belong to a given face
+
+        Parameters
+        ----------
+        face_index : int
+            The index of the face in self.faces
+
+        Returns
+        -------
+        array, shape (3, 2)
+            Each row contains the two indices of an edge's vertices (sorted).
+
+        """
         face_vertices = self.faces[face_index]
 
-        return [np.sort([face_vertices[0], face_vertices[1]]),
-                np.sort([face_vertices[1], face_vertices[2]]),
-                np.sort([face_vertices[0], face_vertices[2]])]
+        return np.vstack([np.sort([face_vertices[0], face_vertices[1]]),
+                          np.sort([face_vertices[1], face_vertices[2]]),
+                          np.sort([face_vertices[0], face_vertices[2]])])
 
     def get_face_area(self, face_index):
-        self.raw_mesh.add_attribute("face_area")
-        return np.abs(self.raw_mesh.get_face_attribute("face_area")[face_index][0])
+        """
+        Compute the area of a face
 
-    def get_face_centroid(self, face_index):
-        self.raw_mesh.add_attribute("face_centroid")
-        return self.raw_mesh.get_face_attribute("face_centroid")[face_index]
+        Parameters
+        ----------
+        face_index : int
+            Index of the face in self.faces
+
+        Returns
+        -------
+        float
+            Area of the input face
+
+        """
+        face_vertices = self.vertices[self.faces[face_index]]
+
+        # compute the length of each edge
+        a = np.linalg.norm(face_vertices[0] - face_vertices[1])
+        b = np.linalg.norm(face_vertices[1] - face_vertices[2])
+        c = np.linalg.norm(face_vertices[0] - face_vertices[2])
+
+        p = (a + b + c) / 2  # compute the quantity appearing in Heron's formula
+
+        return np.sqrt(p * (p - a) * (p - b) * (p - c))  # Heron's formula
 
     def build_grad_matrix(self):
+        """
+        Compute the gradient matrix associated to the mesh
+
+        The gradient is the linear operator mapping a vector of length M (the values taken by a piecewise constant
+        function on the mesh) to a vector of length K (the jumps / values taken by the gradient on each edge of the
+        mesh), M being the number of faces in the mesh, and K being the number of edges.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            The gradient matrix
+
+        """
+        # TODO: comment and test
         indptr = [0]
         indices = []
         data = []
@@ -166,10 +227,27 @@ class Mesh:
 
         return csr_matrix((data, indices, indptr))
 
-    def integrate(self, eta):
-        return integrate_on_triangles(eta, self.vertices[self.faces])
+    def integrate(self, f):
+        """
+        Compute the integral of a given function on each face of the mesh
+
+        Parameters
+        ----------
+        f : function
+            Function to be integrated. f must handle array inputs with shape (N, 2), N being the number of faces of the
+            mesh. It can be vector valued
+
+        Returns
+        -------
+        array, shape (N,) or (N, D)
+            Value computed for the integral of f on each of the N triangles (if f takes values in dimension D, the shape
+            of the resulting array is (N, D))
+
+        """
+        return integrate_on_triangles(f, self.vertices[self.faces])
 
     def find_path(self, edges_index):
+        # TODO: write docstring, comment and test
         edges = self.edges[edges_index]
         path_vertices = [edges[0, 0], edges[0, 1]]
         path_edges = [edges_index[0]]

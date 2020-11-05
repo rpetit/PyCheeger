@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 
 
+# TODO: clean, comment, write docstrings
+
 def plot_primal_dual_results(mesh, u, eta_bar):
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(7, 14))
 
