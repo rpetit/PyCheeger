@@ -291,6 +291,7 @@ def integrate_on_triangles(f, triangles):
     return np.expand_dims(area, tuple(np.arange(1, weighted_evals.ndim))) * weighted_evals
 
 
+# TODO: deal with the case where the solution is a sum of two indicators of disjoint simple sets
 def postprocess_indicator(x, grad_mat):
     """
     Post process a piecewise constant function on a mesh to get an indicator function of a union of cells

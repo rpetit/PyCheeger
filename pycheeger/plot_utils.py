@@ -64,7 +64,7 @@ def plot_simple_set(simple_set, eta=None, display_inner_mesh=False, boundary_col
     plt.show()
 
 
-def plot_simple_functions(u1, u2, display_inner_mesh=False, boundary_color='black'):
+def plot_simple_functions(u1, u2, display_inner_mesh=False, boundary_color='black', save_path=None):
     fig, ax = plt.subplots(figsize=(7, 7))
 
     for i in range(2):
@@ -95,4 +95,8 @@ def plot_simple_functions(u1, u2, display_inner_mesh=False, boundary_color='blac
     ax.axis('off')
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
+
+    if save_path is not None:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight', pad_inches=0)
+
     plt.show()

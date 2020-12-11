@@ -255,17 +255,24 @@ class Mesh:
         mask = np.ones(len(edges), dtype=bool)
         mask[0] = False
 
-        for i in range(len(edges) - 1):
+        done = False
+
+        while not done:
             prev_vertex = path_vertices[-1]
             where_next = np.where(edges[mask] == prev_vertex)
-            i, j = where_next[0][0], where_next[1][0]
 
-            next_vertex = edges[mask][i, 1 - j]
-            next_edge = edges_index[mask][i]
+            if where_next[0].size == 0:
+                done = True
 
-            path_vertices.append(next_vertex)
-            path_edges.append(next_edge)
+            else:
+                i, j = where_next[0][0], where_next[1][0]
 
-            mask[np.where(edges_index == next_edge)] = False
+                next_vertex = edges[mask][i, 1 - j]
+                next_edge = edges_index[mask][i]
+
+                path_vertices.append(next_vertex)
+                path_edges.append(next_edge)
+
+                mask[np.where(edges_index == next_edge)] = False
 
         return path_vertices[:-1], path_edges

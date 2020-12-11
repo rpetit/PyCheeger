@@ -46,7 +46,7 @@ def compute_cheeger(eta, max_tri_area_fm=2e-3, max_iter_fm=10000, plot_results_f
         Cheeger set
     obj_tab : array, shape (n_iter_ld,)
         Values of the objective over the course of the local descent
-    grad_norm_tab, array, shape (n_iter_ld,)
+    grad_norm_tab : array, shape (n_iter_ld,)
         Values of the objective gradient norm over the course of the local descent
 
     """

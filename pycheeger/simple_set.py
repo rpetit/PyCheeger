@@ -3,6 +3,9 @@ import quadpy
 
 from .tools import winding, resample, integrate_on_triangles, triangulate
 
+# scheme for numerical integration on segments
+SCHEME = quadpy.c1.gauss_patterson(4)
+
 
 class SimpleSet:
     """
@@ -135,6 +138,15 @@ class SimpleSet:
         new_boundary_vertices = resample(self.boundary_vertices, num_points)
         self.__init__(new_boundary_vertices, max_tri_area=max_tri_area)
 
+    # TODO: doc
+    def compute_mesh_faces_orientation(self):
+        faces = self.mesh_vertices[self.mesh_faces]
+        diff1 = faces[:, 1] - faces[:, 0]
+        diff2 = faces[:, 2] - faces[:, 1]
+        res = np.sign(np.cross(diff1, diff2)).astype('int')
+
+        return res
+
     def mesh(self, max_tri_area):
         """
         Create the inner mesh of the set
@@ -150,6 +162,17 @@ class SimpleSet:
         # TODO: check if the deep copy is necessary
         self.mesh_vertices = mesh['vertices'].copy()
         self.mesh_faces = mesh['triangles'].copy()
+
+        # TODO: comment
+        orientations = self.compute_mesh_faces_orientation()
+        indices = np.where(orientations < 0)[0]
+        for i in range(len(indices)):
+            index = indices[i]
+            tmp_face = self.mesh_faces[index].copy()
+            self.mesh_faces[index, 1] = tmp_face[index, 2]
+            self.mesh_faces[index, 2] = tmp_face[index, 1]
+
+        assert np.alltrue(orientations > 0)
 
         boundary_faces_indices = []
 
@@ -211,8 +234,6 @@ class SimpleSet:
 
         """
         # TODO: clean up this mess
-        # scheme for numerical integration on segments
-        scheme = quadpy.c1.gauss_patterson(6)
 
         # rotation matrix used to compute outward normals
         if self.is_clockwise:
@@ -223,7 +244,7 @@ class SimpleSet:
         rolled_vertices1 = np.roll(self.boundary_vertices, 1, axis=0)
         rolled_vertices2 = np.roll(self.boundary_vertices, -1, axis=0)
 
-        t = 0.5 * (1 + scheme.points)
+        t = 0.5 * (1 + SCHEME.points)
         x1 = np.multiply.outer(1-t, rolled_vertices1) + np.multiply.outer(t, self.boundary_vertices)
         x2 = np.multiply.outer(1-t, self.boundary_vertices) + np.multiply.outer(t, rolled_vertices2)
 
@@ -236,8 +257,8 @@ class SimpleSet:
         eval2 = np.reshape(eval2_flat, x2.shape[:2] + eval2_flat.shape[1:])
         eval2 = eval2 * np.expand_dims(1-t, tuple(np.arange(1, eval2.ndim)))
 
-        weights1 = 0.5 * np.sum(np.expand_dims(scheme.weights, tuple(np.arange(1, eval1.ndim))) * eval1, axis=0)
-        weights2 = 0.5 * np.sum(np.expand_dims(scheme.weights, tuple(np.arange(1, eval2.ndim))) * eval2, axis=0)
+        weights1 = 0.5 * np.sum(np.expand_dims(SCHEME.weights, tuple(np.arange(1, eval1.ndim))) * eval1, axis=0)
+        weights2 = 0.5 * np.sum(np.expand_dims(SCHEME.weights, tuple(np.arange(1, eval2.ndim))) * eval2, axis=0)
 
         normals1 = np.dot(self.boundary_vertices - rolled_vertices1, rot.T)
         normals2 = np.dot(rolled_vertices2 - self.boundary_vertices, rot.T)
@@ -296,7 +317,8 @@ class SimpleSet:
             n_iter += 1
             obj_tab.append(obj)
 
-            convergence = np.max(np.linalg.norm(gradient, axis=1)) <= eps_stop
+            # convergence = np.max(np.linalg.norm(gradient, axis=1)) <= eps_stop
+            convergence = False
 
             if num_iter_resampling is not None and n_iter % num_iter_resampling == 0:
                 self.resample_boundary(num_points, max_tri_area)
@@ -334,4 +356,4 @@ def disk(center, radius, num_vertices=20, max_tri_area=None):
     complex_vertices = center[0] + 1j * center[1] + radius * np.exp(1j * t)
     vertices = np.stack([np.real(complex_vertices), np.imag(complex_vertices)], axis=1)
 
-    SimpleSet(vertices, max_tri_area)
+    return SimpleSet(vertices, max_tri_area)
