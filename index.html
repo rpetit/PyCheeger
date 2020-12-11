@@ -176,9 +176,237 @@ resampling)</p></li>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>simplet_set</strong> (<em>SimpleSet</em>) – Cheeger set</p></li>
 <li><p><strong>obj_tab</strong> (<em>array, shape (n_iter_ld,)</em>) – Values of the objective over the course of the local descent</p></li>
-<li><p><em>grad_norm_tab, array, shape (n_iter_ld,)</em> – Values of the objective gradient norm over the course of the local descent</p></li>
+<li><p><strong>grad_norm_tab</strong> (<em>array, shape (n_iter_ld,)</em>) – Values of the objective gradient norm over the course of the local descent</p></li>
 </ul>
 </p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-pycheeger.simple_set"></span><dl class="py class">
+<dt id="pycheeger.simple_set.SimpleSet">
+<em class="property">class </em><code class="sig-prename descclassname">pycheeger.simple_set.</code><code class="sig-name descname">SimpleSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">boundary_vertices</span></em>, <em class="sig-param"><span class="n">max_tri_area</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple set</p>
+<dl class="py attribute">
+<dt id="pycheeger.simple_set.SimpleSet.boundary_vertices">
+<code class="sig-name descname">boundary_vertices</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.boundary_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each row contains the two coordinates of a boundary vertex</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array, shape (N, 2)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.simple_set.SimpleSet.num_boundary_vertices">
+<code class="sig-name descname">num_boundary_vertices</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.num_boundary_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of boundary vertices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.simple_set.SimpleSet.is_clockwise">
+<code class="sig-name descname">is_clockwise</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.is_clockwise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the list of boundary vertices is clockwise ordered or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.simple_set.SimpleSet.mesh_vertices">
+<code class="sig-name descname">mesh_vertices</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each row contains the two coordinates of a vertex of the simplet set inner mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array, shape (M, 2)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.simple_set.SimpleSet.mesh_faces">
+<code class="sig-name descname">mesh_faces</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh_faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each row contains the three indices describing a face of the simple set inner mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array, shape (K, 3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pycheeger.simple_set.SimpleSet.boundary_faces_indices">
+<code class="sig-name descname">boundary_faces_indices</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.boundary_faces_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>One dimensional array, contains the indices of the boundary faces of the simple set inner mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.simple_set.SimpleSet.compute_perimeter">
+<code class="sig-name descname">compute_perimeter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_perimeter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the perimeter of the set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The perimeter</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.simple_set.SimpleSet.compute_perimeter_gradient">
+<code class="sig-name descname">compute_perimeter_gradient</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_perimeter_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the “gradient” of the perimeter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Each row contains the two coordinates of the translation to apply at each boundary vertex</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>array, shape (N, 2)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>See <a href="#id7"><span class="problematic" id="id1">[1]_</span></a> (first variation of the perimeter)</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets">1</span></dt>
+<dd><p>Maggi, F. (2012). Sets of finite perimeter and geometric variational problems: an introduction to
+Geometric Measure Theory (No. 135). Cambridge University Press.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.simple_set.SimpleSet.compute_weighted_area">
+<code class="sig-name descname">compute_weighted_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the integral of f over the set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> (<em>function</em>) – Function to be integrated. f must handle array inputs with shape (N, 2). It can be vector valued</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value computed for the integral of f over the set (if f takes values in dimension D, the result will be an
+array of shape (D,))</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or array of shape (D,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.simple_set.SimpleSet.compute_weighted_area_gradient">
+<code class="sig-name descname">compute_weighted_area_gradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_area_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the “gradient” of the weighted area, for a given weight function</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> (<em>function</em>) – Function to be integrated. f must handle array inputs with shape (N, 2). It can be vector valued</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Vectorized computations are really nasty here, mainly because f can be vector valued.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.simple_set.SimpleSet.compute_weighted_areas">
+<code class="sig-name descname">compute_weighted_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the integral of f on each face of the inner mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> (<em>function</em>) – Function to be integrated. f must handle array inputs with shape (N, 2). It can be vector valued</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value computed for the integral of f on each of the N triangles (if f takes values in dimension D, the shape
+of the resulting array is (N, D))</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (N,) or (N,D)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.simple_set.SimpleSet.contains">
+<code class="sig-name descname">contains</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether a given point x is inside the set or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>2</em><em>,</em><em>)</em>) – The input point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Whether x is in the set or not</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.simple_set.SimpleSet.mesh">
+<code class="sig-name descname">mesh</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_tri_area</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the inner mesh of the set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_tri_area</strong> (<em>float</em>) – Maximum triangle area for the inner mesh</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pycheeger.simple_set.SimpleSet.resample_boundary">
+<code class="sig-name descname">resample_boundary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_points</span></em>, <em class="sig-param"><span class="n">max_tri_area</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.resample_boundary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample the boundary of the simple set, and creates a new inner mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_points</strong> (<em>int</em>) – Number of points in the resampled boundary</p></li>
+<li><p><strong>max_tri_area</strong> (<em>float</em>) – Maximum triangle area for the new inner mesh</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="pycheeger.simple_set.disk">
+<code class="sig-prename descclassname">pycheeger.simple_set.</code><code class="sig-name descname">disk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">center</span></em>, <em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">num_vertices</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">max_tri_area</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.disk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a SimpleSet with boundary vertices regularly spaced on a circle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>center</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>2</em><em>,</em><em>)</em>) – Coordinates of the center</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – Radius of the circles</p></li>
+<li><p><strong>num_vertices</strong> (<em>int</em>) – Number of boundary vertices (on the disk)</p></li>
+<li><p><strong>max_tri_area</strong> (<em>None</em><em> or </em><em>float</em>) – Maximum area allowed for triangles, see Shewchuk’s Triangle mesh generator, defaut None (no constraint)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pycheeger.simple_set.SimpleSet" title="pycheeger.simple_set.SimpleSet">SimpleSet</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -431,10 +659,10 @@ of the resulting array is (N, D))</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Sorting based algorithm. See <a href="#id5"><span class="problematic" id="id1">[1]_</span></a> for a detailed explanation of the computations and alternative algorithms.</p>
+<p>Sorting based algorithm. See <a href="#id8"><span class="problematic" id="id3">[1]_</span></a> for a detailed explanation of the computations and alternative algorithms.</p>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets">1</span></dt>
+<dt class="label" id="id4"><span class="brackets">1</span></dt>
 <dd><p>L. Condat, <em>Fast Projection onto the Simplex and the l1 Ball</em>, Mathematical Programming,
 Series A, Springer, 2016, 158 (1), pp.575-585.</p>
 </dd>
@@ -502,10 +730,10 @@ jumps on each edge of the mesh</p></li>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>See <a href="#id6"><span class="problematic" id="id3">[1]_</span></a> for a detailed explanation of the computations and alternative algorithms.</p>
+<p>See <a href="#id9"><span class="problematic" id="id5">[1]_</span></a> for a detailed explanation of the computations and alternative algorithms.</p>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id4"><span class="brackets">1</span></dt>
+<dt class="label" id="id6"><span class="brackets">1</span></dt>
 <dd><p>L. Condat, <em>Fast Projection onto the Simplex and the l1 Ball</em>, Mathematical Programming,
 Series A, Springer, 2016, 158 (1), pp.575-585.</p>
 </dd>
