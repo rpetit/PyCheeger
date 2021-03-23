@@ -16,11 +16,13 @@ def plot_primal_dual_results(mesh, u, eta_bar):
 
     axs[0].triplot(triangulation, color='black', alpha=0.1)
     axs[0].axis('equal')
+    axs[0].axis('off')
     im = axs[0].tripcolor(triangulation, facecolors=eta_avg, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     fig.colorbar(im, ax=axs[0])
 
     axs[1].triplot(triangulation, color='black', alpha=0.1)
     axs[1].axis('equal')
+    axs[1].axis('off')
     im = axs[1].tripcolor(triangulation, facecolors=u, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     fig.colorbar(im, ax=axs[1])
 
@@ -59,8 +61,8 @@ def plot_simple_set(simple_set, eta=None, display_inner_mesh=False, boundary_col
 
     ax.axis('equal')
     ax.axis('off')
-    ax.set_xlim(-1, 1)
-    ax.set_ylim(-1, 1)
+    # ax.set_xlim(-1, 1)
+    # ax.set_ylim(-1, 1)
     plt.show()
 
 

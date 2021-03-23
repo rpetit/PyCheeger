@@ -125,3 +125,6 @@ dmypy.json
 
 # PyCharm stuff
 .idea/
+
+# experiments
+experiments/
