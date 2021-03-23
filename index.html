@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>PyCheeger &mdash; PyCheeger 0.1 documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
@@ -50,7 +52,7 @@
           
 
           
-            <a href="#" class="icon icon-home" alt="Documentation Home"> PyCheeger
+            <a href="#" class="icon icon-home"> PyCheeger
           
 
           
@@ -124,6 +126,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -135,7 +139,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -153,7 +157,7 @@
 <span id="pycheeger"></span><h1>PyCheeger<a class="headerlink" href="#module-pycheeger.compute_cheeger" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="pycheeger.compute_cheeger.compute_cheeger">
-<code class="sig-prename descclassname">pycheeger.compute_cheeger.</code><code class="sig-name descname">compute_cheeger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">eta</span></em>, <em class="sig-param"><span class="n">max_tri_area_fm</span><span class="o">=</span><span class="default_value">0.002</span></em>, <em class="sig-param"><span class="n">max_iter_fm</span><span class="o">=</span><span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">plot_results_fm</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_boundary_vertices_ld</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">max_tri_area_ld</span><span class="o">=</span><span class="default_value">0.005</span></em>, <em class="sig-param"><span class="n">step_size_ld</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">max_iter_ld</span><span class="o">=</span><span class="default_value">500</span></em>, <em class="sig-param"><span class="n">convergence_tol_ld</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">num_iter_resampling_ld</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">plot_results_ld</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.compute_cheeger.compute_cheeger" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.compute_cheeger.</span></code><code class="sig-name descname"><span class="pre">compute_cheeger</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tri_area_fm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.002</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_fm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_results_fm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_boundary_vertices_ld</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tri_area_ld</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size_ld</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_ld</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_tol_ld</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iter_resampling_ld</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_results_ld</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.compute_cheeger.compute_cheeger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the Cheeger set associated to the weight function eta</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -185,11 +189,11 @@ resampling)</p></li>
 
 <span class="target" id="module-pycheeger.simple_set"></span><dl class="py class">
 <dt id="pycheeger.simple_set.SimpleSet">
-<em class="property">class </em><code class="sig-prename descclassname">pycheeger.simple_set.</code><code class="sig-name descname">SimpleSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">boundary_vertices</span></em>, <em class="sig-param"><span class="n">max_tri_area</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">pycheeger.simple_set.</span></code><code class="sig-name descname"><span class="pre">SimpleSet</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boundary_vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tri_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple set</p>
 <dl class="py attribute">
 <dt id="pycheeger.simple_set.SimpleSet.boundary_vertices">
-<code class="sig-name descname">boundary_vertices</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.boundary_vertices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">boundary_vertices</span></code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.boundary_vertices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each row contains the two coordinates of a boundary vertex</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -200,7 +204,7 @@ resampling)</p></li>
 
 <dl class="py attribute">
 <dt id="pycheeger.simple_set.SimpleSet.num_boundary_vertices">
-<code class="sig-name descname">num_boundary_vertices</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.num_boundary_vertices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">num_boundary_vertices</span></code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.num_boundary_vertices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of boundary vertices</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -211,7 +215,7 @@ resampling)</p></li>
 
 <dl class="py attribute">
 <dt id="pycheeger.simple_set.SimpleSet.is_clockwise">
-<code class="sig-name descname">is_clockwise</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.is_clockwise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">is_clockwise</span></code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.is_clockwise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether the list of boundary vertices is clockwise ordered or not</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -222,7 +226,7 @@ resampling)</p></li>
 
 <dl class="py attribute">
 <dt id="pycheeger.simple_set.SimpleSet.mesh_vertices">
-<code class="sig-name descname">mesh_vertices</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh_vertices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">mesh_vertices</span></code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh_vertices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each row contains the two coordinates of a vertex of the simplet set inner mesh</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -233,7 +237,7 @@ resampling)</p></li>
 
 <dl class="py attribute">
 <dt id="pycheeger.simple_set.SimpleSet.mesh_faces">
-<code class="sig-name descname">mesh_faces</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh_faces" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">mesh_faces</span></code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh_faces" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each row contains the three indices describing a face of the simple set inner mesh</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -244,7 +248,7 @@ resampling)</p></li>
 
 <dl class="py attribute">
 <dt id="pycheeger.simple_set.SimpleSet.boundary_faces_indices">
-<code class="sig-name descname">boundary_faces_indices</code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.boundary_faces_indices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">boundary_faces_indices</span></code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.boundary_faces_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>One dimensional array, contains the indices of the boundary faces of the simple set inner mesh</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -255,7 +259,7 @@ resampling)</p></li>
 
 <dl class="py method">
 <dt id="pycheeger.simple_set.SimpleSet.compute_perimeter">
-<code class="sig-name descname">compute_perimeter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_perimeter" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">compute_perimeter</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_perimeter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the perimeter of the set</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -269,7 +273,7 @@ resampling)</p></li>
 
 <dl class="py method">
 <dt id="pycheeger.simple_set.SimpleSet.compute_perimeter_gradient">
-<code class="sig-name descname">compute_perimeter_gradient</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_perimeter_gradient" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">compute_perimeter_gradient</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_perimeter_gradient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the “gradient” of the perimeter</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -292,7 +296,7 @@ Geometric Measure Theory (No. 135). Cambridge University Press.</p>
 
 <dl class="py method">
 <dt id="pycheeger.simple_set.SimpleSet.compute_weighted_area">
-<code class="sig-name descname">compute_weighted_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_area" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">compute_weighted_area</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_area" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the integral of f over the set</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -310,7 +314,7 @@ array of shape (D,))</p>
 
 <dl class="py method">
 <dt id="pycheeger.simple_set.SimpleSet.compute_weighted_area_gradient">
-<code class="sig-name descname">compute_weighted_area_gradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_area_gradient" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">compute_weighted_area_gradient</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_area_gradient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the “gradient” of the weighted area, for a given weight function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -329,7 +333,7 @@ array of shape (D,))</p>
 
 <dl class="py method">
 <dt id="pycheeger.simple_set.SimpleSet.compute_weighted_areas">
-<code class="sig-name descname">compute_weighted_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_areas" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">compute_weighted_areas</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_areas" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the integral of f on each face of the inner mesh</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -347,7 +351,7 @@ of the resulting array is (N, D))</p>
 
 <dl class="py method">
 <dt id="pycheeger.simple_set.SimpleSet.contains">
-<code class="sig-name descname">contains</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.contains" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">contains</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.contains" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether a given point x is inside the set or not</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -364,7 +368,7 @@ of the resulting array is (N, D))</p>
 
 <dl class="py method">
 <dt id="pycheeger.simple_set.SimpleSet.mesh">
-<code class="sig-name descname">mesh</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_tri_area</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">mesh</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_tri_area</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the inner mesh of the set</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -375,7 +379,7 @@ of the resulting array is (N, D))</p>
 
 <dl class="py method">
 <dt id="pycheeger.simple_set.SimpleSet.resample_boundary">
-<code class="sig-name descname">resample_boundary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_points</span></em>, <em class="sig-param"><span class="n">max_tri_area</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.resample_boundary" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">resample_boundary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tri_area</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.resample_boundary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resample the boundary of the simple set, and creates a new inner mesh</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -391,7 +395,7 @@ of the resulting array is (N, D))</p>
 
 <dl class="py function">
 <dt id="pycheeger.simple_set.disk">
-<code class="sig-prename descclassname">pycheeger.simple_set.</code><code class="sig-name descname">disk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">center</span></em>, <em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">num_vertices</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">max_tri_area</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.disk" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.simple_set.</span></code><code class="sig-name descname"><span class="pre">disk</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_vertices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tri_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.disk" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a SimpleSet with boundary vertices regularly spaced on a circle</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -413,11 +417,11 @@ of the resulting array is (N, D))</p>
 
 <span class="target" id="module-pycheeger.mesh"></span><dl class="py class">
 <dt id="pycheeger.mesh.Mesh">
-<em class="property">class </em><code class="sig-prename descclassname">pycheeger.mesh.</code><code class="sig-name descname">Mesh</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raw_mesh</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">pycheeger.mesh.</span></code><code class="sig-name descname"><span class="pre">Mesh</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_mesh</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Custom mesh class</p>
 <dl class="py attribute">
 <dt id="pycheeger.mesh.Mesh.vertices">
-<code class="sig-name descname">vertices</code><a class="headerlink" href="#pycheeger.mesh.Mesh.vertices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">vertices</span></code><a class="headerlink" href="#pycheeger.mesh.Mesh.vertices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each row contains the two coordinates of a vertex</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -428,7 +432,7 @@ of the resulting array is (N, D))</p>
 
 <dl class="py attribute">
 <dt id="pycheeger.mesh.Mesh.faces">
-<code class="sig-name descname">faces</code><a class="headerlink" href="#pycheeger.mesh.Mesh.faces" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">faces</span></code><a class="headerlink" href="#pycheeger.mesh.Mesh.faces" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each row contains the three indices of the face’s vertices. For convenience reasons, the values in each row are
 sorted, i.e. the face whose vertices have indices 0, 1, 2 will always be stored as [0, 1, 2] (and not [1, 0, 2])</p>
 <dl class="field-list simple">
@@ -440,7 +444,7 @@ sorted, i.e. the face whose vertices have indices 0, 1, 2 will always be stored 
 
 <dl class="py attribute">
 <dt id="pycheeger.mesh.Mesh.edges">
-<code class="sig-name descname">edges</code><a class="headerlink" href="#pycheeger.mesh.Mesh.edges" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">edges</span></code><a class="headerlink" href="#pycheeger.mesh.Mesh.edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each row contains the two indices of the edge’s vertices. For convenience reasons, the values in each row are
 sorted, i.e. the edge whose vertices have indices 0, 1 will always be stored as [0, 1] (and not [1, 0])</p>
 <dl class="field-list simple">
@@ -452,7 +456,7 @@ sorted, i.e. the edge whose vertices have indices 0, 1 will always be stored as 
 
 <dl class="py attribute">
 <dt id="pycheeger.mesh.Mesh.num_edges">
-<code class="sig-name descname">num_edges</code><a class="headerlink" href="#pycheeger.mesh.Mesh.num_edges" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">num_edges</span></code><a class="headerlink" href="#pycheeger.mesh.Mesh.num_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equals K</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -463,7 +467,7 @@ sorted, i.e. the edge whose vertices have indices 0, 1 will always be stored as 
 
 <dl class="py attribute">
 <dt id="pycheeger.mesh.Mesh.num_faces">
-<code class="sig-name descname">num_faces</code><a class="headerlink" href="#pycheeger.mesh.Mesh.num_faces" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">num_faces</span></code><a class="headerlink" href="#pycheeger.mesh.Mesh.num_faces" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equals M</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -474,7 +478,7 @@ sorted, i.e. the edge whose vertices have indices 0, 1 will always be stored as 
 
 <dl class="py attribute">
 <dt id="pycheeger.mesh.Mesh.num_vertices">
-<code class="sig-name descname">num_vertices</code><a class="headerlink" href="#pycheeger.mesh.Mesh.num_vertices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">num_vertices</span></code><a class="headerlink" href="#pycheeger.mesh.Mesh.num_vertices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equals N</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -485,7 +489,7 @@ sorted, i.e. the edge whose vertices have indices 0, 1 will always be stored as 
 
 <dl class="py attribute">
 <dt id="pycheeger.mesh.Mesh.grad_mat">
-<code class="sig-name descname">grad_mat</code><a class="headerlink" href="#pycheeger.mesh.Mesh.grad_mat" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">grad_mat</span></code><a class="headerlink" href="#pycheeger.mesh.Mesh.grad_mat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Linear operator mapping a vector of length M (the values taken by a piecewise constant function on the mesh) to
 a vector of length K (the jumps / values taken by the gradient on each edge of the mesh)</p>
 <dl class="field-list simple">
@@ -497,7 +501,7 @@ a vector of length K (the jumps / values taken by the gradient on each edge of t
 
 <dl class="py method">
 <dt id="pycheeger.mesh.Mesh.build_grad_matrix">
-<code class="sig-name descname">build_grad_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.build_grad_matrix" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">build_grad_matrix</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.build_grad_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the gradient matrix associated to the mesh</p>
 <p>The gradient is the linear operator mapping a vector of length M (the values taken by a piecewise constant
 function on the mesh) to a vector of length K (the jumps / values taken by the gradient on each edge of the
@@ -514,7 +518,7 @@ mesh), M being the number of faces in the mesh, and K being the number of edges.
 
 <dl class="py method">
 <dt id="pycheeger.mesh.Mesh.get_edge_adjacent_faces">
-<code class="sig-name descname">get_edge_adjacent_faces</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_edge_adjacent_faces" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_edge_adjacent_faces</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_edge_adjacent_faces" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the index of all faces to which a given edge belongs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -531,7 +535,7 @@ mesh), M being the number of faces in the mesh, and K being the number of edges.
 
 <dl class="py method">
 <dt id="pycheeger.mesh.Mesh.get_edge_index">
-<code class="sig-name descname">get_edge_index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_edge_index" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_edge_index</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_edge_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the index of an edge given by its two vertices in the array of edges</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -548,7 +552,7 @@ mesh), M being the number of faces in the mesh, and K being the number of edges.
 
 <dl class="py method">
 <dt id="pycheeger.mesh.Mesh.get_edge_length">
-<code class="sig-name descname">get_edge_length</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_edge_length" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_edge_length</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_edge_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the euclidean distance between the two vertices of an edge</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -565,7 +569,7 @@ mesh), M being the number of faces in the mesh, and K being the number of edges.
 
 <dl class="py method">
 <dt id="pycheeger.mesh.Mesh.get_face_area">
-<code class="sig-name descname">get_face_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">face_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_face_area" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_face_area</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">face_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_face_area" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the area of a face</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -582,7 +586,7 @@ mesh), M being the number of faces in the mesh, and K being the number of edges.
 
 <dl class="py method">
 <dt id="pycheeger.mesh.Mesh.get_face_edges">
-<code class="sig-name descname">get_face_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">face_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_face_edges" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_face_edges</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">face_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_face_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the list of edges which belong to a given face</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -599,7 +603,7 @@ mesh), M being the number of faces in the mesh, and K being the number of edges.
 
 <dl class="py method">
 <dt id="pycheeger.mesh.Mesh.get_orientation">
-<code class="sig-name descname">get_orientation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">face_index</span></em>, <em class="sig-param"><span class="n">edge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_orientation" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_orientation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">face_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.get_orientation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the orientation of an edge with respect to a given face.</p>
 <p>The orientation of an edge with respect to a face is defined as +1 if the normal is the outward normal and -1
 otherwise. The normal is computed by applying a counter clockwise rotation to the edge vector, which is himself
@@ -624,7 +628,7 @@ arbitrary, but the only thing we need is to keep one that is consistent all alon
 
 <dl class="py method">
 <dt id="pycheeger.mesh.Mesh.integrate">
-<code class="sig-name descname">integrate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.integrate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">integrate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.mesh.Mesh.integrate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the integral of a given function on each face of the mesh</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -645,7 +649,7 @@ of the resulting array is (N, D))</p>
 
 <span class="target" id="module-pycheeger.tools"></span><dl class="py function">
 <dt id="pycheeger.tools.find_threshold">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">find_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.find_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">find_threshold</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.find_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the value of the Lagrange multiplier involved in the projection of x into the unit l1 ball</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -671,7 +675,7 @@ Series A, Springer, 2016, 158 (1), pp.575-585.</p>
 
 <dl class="py function">
 <dt id="pycheeger.tools.integrate_on_triangles">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">integrate_on_triangles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em>, <em class="sig-param"><span class="n">triangles</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.integrate_on_triangles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">integrate_on_triangles</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triangles</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.integrate_on_triangles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Numerical integration of f on a list of triangles</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -695,7 +699,7 @@ the code handles arbitrary dimensions and is too generic)</p>
 
 <dl class="py function">
 <dt id="pycheeger.tools.postprocess_indicator">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">postprocess_indicator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">grad_mat</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.postprocess_indicator" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">postprocess_indicator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_mat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.postprocess_indicator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Post process a piecewise constant function on a mesh to get an indicator function of a union of cells</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -716,7 +720,7 @@ jumps on each edge of the mesh</p></li>
 
 <dl class="py function">
 <dt id="pycheeger.tools.proj_unit_l1_ball">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">proj_unit_l1_ball</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.proj_unit_l1_ball" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">proj_unit_l1_ball</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.proj_unit_l1_ball" title="Permalink to this definition">¶</a></dt>
 <dd><p>Projection onto the l1 unit ball</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -742,7 +746,7 @@ Series A, Springer, 2016, 158 (1), pp.575-585.</p>
 
 <dl class="py function">
 <dt id="pycheeger.tools.prox_dot_prod">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">prox_dot_prod</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">tau</span></em>, <em class="sig-param"><span class="n">a</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.prox_dot_prod" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">prox_dot_prod</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.prox_dot_prod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Proximal map of the inner product between x and a</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -763,7 +767,7 @@ Series A, Springer, 2016, 158 (1), pp.575-585.</p>
 
 <dl class="py function">
 <dt id="pycheeger.tools.prox_inf_norm">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">prox_inf_norm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">tau</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.prox_inf_norm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">prox_inf_norm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.prox_inf_norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Proximal map of the l-infinity norm</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -786,7 +790,7 @@ Series A, Springer, 2016, 158 (1), pp.575-585.</p>
 
 <dl class="py function">
 <dt id="pycheeger.tools.resample">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">curve</span></em>, <em class="sig-param"><span class="n">num_points</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.resample" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">resample</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curve</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.resample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resample a closed polygonal chain</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -807,7 +811,7 @@ one (the input array should be a minimal description of the closed polygonal cha
 
 <dl class="py function">
 <dt id="pycheeger.tools.run_primal_dual">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">run_primal_dual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mesh</span></em>, <em class="sig-param"><span class="n">eta_bar</span></em>, <em class="sig-param"><span class="n">max_iter</span></em>, <em class="sig-param"><span class="n">grad_mat_norm</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.run_primal_dual" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">run_primal_dual</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta_bar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_mat_norm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.run_primal_dual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solves the “fixed mesh weighted Cheeger problem” by running a primal dual algorithm</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -831,7 +835,7 @@ implemented yet)</p></li>
 
 <dl class="py function">
 <dt id="pycheeger.tools.triangulate">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">triangulate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertices</span></em>, <em class="sig-param"><span class="n">max_triangle_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">split_boundary</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">plot_result</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.triangulate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">triangulate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_triangle_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.triangulate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Triangulate the interior of a closed polygonal curve using the triangle library (Python wrapper around Shewchuk’s
 Triangle mesh generator)</p>
 <dl class="field-list simple">
@@ -854,7 +858,7 @@ Triangle mesh generator)</p>
 
 <dl class="py function">
 <dt id="pycheeger.tools.winding">
-<code class="sig-prename descclassname">pycheeger.tools.</code><code class="sig-name descname">winding</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">vertices</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.winding" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pycheeger.tools.</span></code><code class="sig-name descname"><span class="pre">winding</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.tools.winding" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the winding number of a closed polygonal curve described by its vertices around the point x. This number is
 zero if and only if x is outside the polygon.</p>
 <dl class="field-list simple">
@@ -880,28 +884,25 @@ zero if and only if x is outside the polygon.</p>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Romain Petit
+        &#169; Copyright 2020, Romain Petit.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
