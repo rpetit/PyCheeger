@@ -4,6 +4,7 @@ from scipy.sparse.linalg import svds
 
 from .mesh import Mesh
 from .simple_set import SimpleSet
+from .optimizer import CheegerOptimizer
 from .tools import triangulate, run_primal_dual, resample
 from .plot_utils import plot_primal_dual_results, plot_simple_set
 
@@ -77,11 +78,11 @@ def compute_cheeger(eta, max_tri_area_fm=2e-3, max_iter_fm=10000, plot_results_f
     simple_set = SimpleSet(boundary_vertices, max_tri_area_ld)
 
     # perform the local descent step
-    obj_tab, grad_norm_tab = simple_set.perform_gradient_descent(eta, step_size_ld, max_iter_ld, convergence_tol_ld,
-                                                                 num_boundary_vertices_ld, max_tri_area_ld,
-                                                                 num_iter_resampling_ld)
+    optimizer = CheegerOptimizer(step_size_ld, max_iter_ld, convergence_tol_ld, num_boundary_vertices_ld,
+                                 max_tri_area_ld, num_iter_resampling_ld, 0.1, 0.5)
+    cheeger_set, obj_tab, grad_norm_tab = optimizer.run(eta, simple_set)
 
     if plot_results_ld:
-        plot_simple_set(simple_set, eta=eta, display_inner_mesh=False)
+        plot_simple_set(cheeger_set, eta=eta, display_inner_mesh=False)
 
-    return simple_set, obj_tab, grad_norm_tab
+    return cheeger_set, obj_tab, grad_norm_tab

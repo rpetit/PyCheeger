@@ -1,7 +1,7 @@
 import numpy as np
 import quadpy
 
-from .tools import winding, resample, integrate_on_triangles, triangulate
+from .tools import winding, integrate_on_triangles, triangulate
 
 # scheme for numerical integration on segments
 SCHEME = quadpy.c1.gauss_patterson(4)
@@ -23,7 +23,7 @@ class SimpleSet:
         Each row contains the two coordinates of a vertex of the simplet set inner mesh
     mesh_faces : array, shape (K, 3)
         Each row contains the three indices describing a face of the simple set inner mesh
-    boundary_faces_indices : array
+    mesh_boundary_faces_indices : array
         One dimensional array, contains the indices of the boundary faces of the simple set inner mesh
 
     """
@@ -39,7 +39,6 @@ class SimpleSet:
         max_tri_area : None or float
             Maximum area allowed for triangles, see Shewchuk's Triangle mesh generator, defaut None (no constraint)
         """
-        self.boundary_vertices = boundary_vertices
         self.num_boundary_vertices = len(boundary_vertices)
 
         # the curve is clockwise if and only if the sum over the edges of (x2-x1)(y2+y1) is positive
@@ -49,10 +48,26 @@ class SimpleSet:
 
         self.mesh_vertices = None
         self.mesh_faces = None
-        self.boundary_faces_indices = None
+        self.mesh_boundary_faces_indices = None
 
         # creation of the inner mesh
-        self.mesh(max_tri_area)
+        self.create_mesh(boundary_vertices, max_tri_area)
+
+    @property
+    def boundary_vertices_indices(self):
+        return np.arange(self.num_boundary_vertices)
+
+    @property
+    def boundary_vertices(self):
+        return self.mesh_vertices[self.boundary_vertices_indices]
+
+    @property
+    def mesh_boundary_faces(self):
+        return self.mesh_faces[self.mesh_boundary_faces_indices]
+
+    @boundary_vertices.setter
+    def boundary_vertices(self, new_boundary_vertices):
+        self.mesh_vertices[self.boundary_vertices_indices] = new_boundary_vertices
 
     def contains(self, x):
         """
@@ -86,7 +101,7 @@ class SimpleSet:
         res = np.sum(np.linalg.norm(rolled_boundary_vertices - self.boundary_vertices, axis=1))
         return res
 
-    def compute_weighted_areas(self, f):
+    def compute_weighted_area_tab(self, f, boundary_faces_only=False):
         """
         Compute the integral of f on each face of the inner mesh
 
@@ -94,6 +109,8 @@ class SimpleSet:
         ----------
         f : function
             Function to be integrated. f must handle array inputs with shape (N, 2). It can be vector valued
+        boundary_faces_only : bool
+            Whether to compute weighted areas only on boundary faces, defaut False
 
         Returns
         -------
@@ -102,7 +119,11 @@ class SimpleSet:
             of the resulting array is (N, D))
 
         """
-        triangles = self.mesh_vertices[self.mesh_faces]
+        if boundary_faces_only:
+            triangles = self.mesh_vertices[self.mesh_boundary_faces]
+        else:
+            triangles = self.mesh_vertices[self.mesh_faces]
+
         return integrate_on_triangles(f, triangles)
 
     def compute_weighted_area(self, f):
@@ -121,22 +142,7 @@ class SimpleSet:
             Value computed for the integral of f over the set (if f takes values in dimension D, the result will be an
             array of shape (D,))
         """
-        return np.sum(self.compute_weighted_areas(f))
-
-    def resample_boundary(self, num_points, max_tri_area):
-        """
-        Resample the boundary of the simple set, and creates a new inner mesh
-
-        Parameters
-        ----------
-        num_points : int
-            Number of points in the resampled boundary
-        max_tri_area : float
-            Maximum triangle area for the new inner mesh
-
-        """
-        new_boundary_vertices = resample(self.boundary_vertices, num_points)
-        self.__init__(new_boundary_vertices, max_tri_area=max_tri_area)
+        return np.sum(self.compute_weighted_area_tab(f))
 
     # TODO: doc
     def compute_mesh_faces_orientation(self):
@@ -147,21 +153,22 @@ class SimpleSet:
 
         return res
 
-    def mesh(self, max_tri_area):
+    def create_mesh(self, boundary_vertices, max_tri_area):
         """
         Create the inner mesh of the set
 
         Parameters
         ----------
+        boundary_vertices : array, shape (N, 2)
+            Each row contains the two coordinates of a boundary vertex
         max_tri_area : float
             Maximum triangle area for the inner mesh
 
         """
-        mesh = triangulate(self.boundary_vertices, max_triangle_area=max_tri_area)
+        mesh = triangulate(boundary_vertices, max_triangle_area=max_tri_area)
 
-        # TODO: check if the deep copy is necessary
-        self.mesh_vertices = mesh['vertices'].copy()
-        self.mesh_faces = mesh['triangles'].copy()
+        self.mesh_vertices = mesh['vertices']
+        self.mesh_faces = mesh['triangles']
 
         # TODO: comment
         orientations = self.compute_mesh_faces_orientation()
@@ -182,7 +189,7 @@ class SimpleSet:
             if len(np.intersect1d(np.arange(self.num_boundary_vertices), self.mesh_faces[i])) > 0:
                 boundary_faces_indices.append(i)
 
-        self.boundary_faces_indices = np.array(boundary_faces_indices)
+        self.mesh_boundary_faces_indices = np.array(boundary_faces_indices)
 
     def compute_perimeter_gradient(self):
         """
@@ -269,67 +276,6 @@ class SimpleSet:
                     np.expand_dims(normals2, tuple(np.arange(weights2.ndim-1)))
 
         return gradient1 + gradient2
-
-    def perform_gradient_descent(self, f, step_size, max_iter, eps_stop, num_points, max_tri_area, num_iter_resampling,
-                                 alpha=0.1, beta=0.5):
-        # TODO: allow to perform a fixed step gradient descent
-        obj_tab = []
-        grad_norm_tab = []
-
-        convergence = False
-        n_iter = 0
-
-        areas = self.compute_weighted_areas(f)
-        perimeter = self.compute_perimeter()
-        area = np.sum(areas)
-
-        obj = perimeter / np.abs(area)
-        obj_tab.append(obj)
-
-        while not convergence and n_iter < max_iter:
-            perimeter_gradient = self.compute_perimeter_gradient()
-            area_gradient = self.compute_weighted_area_gradient(f)
-
-            gradient = np.sign(area) * (perimeter_gradient * area - area_gradient * perimeter) / area ** 2
-            grad_norm_tab.append(np.max(np.linalg.norm(gradient, axis=1)))
-
-            t = step_size
-
-            ag_condition = False
-
-            former_obj = obj
-            former_boundary_vertices = self.boundary_vertices
-
-            while not ag_condition:
-                self.boundary_vertices = former_boundary_vertices - t * gradient
-                # first vertices are boundary vertices
-                self.mesh_vertices[:self.num_boundary_vertices] = self.boundary_vertices
-
-                areas[self.boundary_faces_indices] = integrate_on_triangles(f, self.mesh_vertices[self.mesh_faces[self.boundary_faces_indices]])
-
-                area = np.sum(areas)
-                perimeter = self.compute_perimeter()
-                obj = perimeter / np.abs(area)
-
-                ag_condition = (obj <= former_obj - alpha * t * np.linalg.norm(gradient) ** 2)
-                t = beta * t
-
-            n_iter += 1
-            obj_tab.append(obj)
-
-            # convergence = np.max(np.linalg.norm(gradient, axis=1)) <= eps_stop
-            convergence = False
-
-            if num_iter_resampling is not None and n_iter % num_iter_resampling == 0:
-                self.resample_boundary(num_points, max_tri_area)
-                areas = self.compute_weighted_areas(f)
-                area = np.sum(areas)
-                perimeter = self.compute_perimeter()
-                obj = perimeter / np.abs(area)
-
-        self.mesh(max_tri_area)
-
-        return obj_tab, grad_norm_tab
 
 
 def disk(center, radius, num_vertices=20, max_tri_area=None):
