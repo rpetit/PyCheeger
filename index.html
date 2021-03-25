@@ -247,8 +247,8 @@ resampling)</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="pycheeger.simple_set.SimpleSet.boundary_faces_indices">
-<code class="sig-name descname"><span class="pre">boundary_faces_indices</span></code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.boundary_faces_indices" title="Permalink to this definition">¶</a></dt>
+<dt id="pycheeger.simple_set.SimpleSet.mesh_boundary_faces_indices">
+<code class="sig-name descname"><span class="pre">mesh_boundary_faces_indices</span></code><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh_boundary_faces_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>One dimensional array, contains the indices of the boundary faces of the simple set inner mesh</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -332,12 +332,15 @@ array of shape (D,))</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="pycheeger.simple_set.SimpleSet.compute_weighted_areas">
-<code class="sig-name descname"><span class="pre">compute_weighted_areas</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_areas" title="Permalink to this definition">¶</a></dt>
+<dt id="pycheeger.simple_set.SimpleSet.compute_weighted_area_tab">
+<code class="sig-name descname"><span class="pre">compute_weighted_area_tab</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_faces_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.compute_weighted_area_tab" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the integral of f on each face of the inner mesh</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>f</strong> (<em>function</em>) – Function to be integrated. f must handle array inputs with shape (N, 2). It can be vector valued</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> (<em>function</em>) – Function to be integrated. f must handle array inputs with shape (N, 2). It can be vector valued</p></li>
+<li><p><strong>boundary_faces_only</strong> (<em>bool</em>) – Whether to compute weighted areas only on boundary faces, defaut False</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Value computed for the integral of f on each of the N triangles (if f takes values in dimension D, the shape
@@ -367,25 +370,14 @@ of the resulting array is (N, D))</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="pycheeger.simple_set.SimpleSet.mesh">
-<code class="sig-name descname"><span class="pre">mesh</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_tri_area</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.mesh" title="Permalink to this definition">¶</a></dt>
+<dt id="pycheeger.simple_set.SimpleSet.create_mesh">
+<code class="sig-name descname"><span class="pre">create_mesh</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boundary_vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tri_area</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.create_mesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the inner mesh of the set</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>max_tri_area</strong> (<em>float</em>) – Maximum triangle area for the inner mesh</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="pycheeger.simple_set.SimpleSet.resample_boundary">
-<code class="sig-name descname"><span class="pre">resample_boundary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tri_area</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pycheeger.simple_set.SimpleSet.resample_boundary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resample the boundary of the simple set, and creates a new inner mesh</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>num_points</strong> (<em>int</em>) – Number of points in the resampled boundary</p></li>
-<li><p><strong>max_tri_area</strong> (<em>float</em>) – Maximum triangle area for the new inner mesh</p></li>
+<li><p><strong>boundary_vertices</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>N</em><em>, </em><em>2</em><em>)</em>) – Each row contains the two coordinates of a boundary vertex</p></li>
+<li><p><strong>max_tri_area</strong> (<em>float</em>) – Maximum triangle area for the inner mesh</p></li>
 </ul>
 </dd>
 </dl>
