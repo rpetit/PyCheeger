@@ -1,0 +1,71 @@
+import pytest
+import quadpy
+
+from math import pi, exp
+
+from pycheeger.gaussian_polynomial import *
+from pycheeger.simple_set import *
+
+from pycheeger.plot_utils import plot_simple_set
+
+
+std = 0.1
+weight = 2.0
+radius = 0.5
+
+eta = GaussianPolynomial(np.array([[0.0, 0.0]]), np.array([weight]), std)
+simple_set = disk(np.array([0.0, 0.0]), radius, num_vertices=30, max_tri_area=1e-2)
+
+
+def test_weighted_area():
+    my_val = simple_set.compute_weighted_area(eta)
+
+    # scheme = quadpy.s2.get_good_scheme(15)
+    # quadpy_val = scheme.integrate(lambda x: eta(x.T), [0.0, 0.0], radius)
+    # assert quadpy_val == pytest.approx(weight * 2 * pi * std ** 2 * (1 - exp(-0.5 * radius ** 2 / std ** 2)))
+
+    scheme = quadpy.t2.get_good_scheme(10)
+    quadpy_val = 0
+    triangles = simple_set.mesh_vertices[simple_set.mesh_faces]
+
+    for i in range(len(triangles)):
+        quadpy_val += scheme.integrate(lambda x: eta(x.T), triangles[i])
+
+    analytic_val = weight * 2 * pi * std ** 2 * (1 - exp(-0.5 * radius ** 2 / std ** 2))
+
+    assert quadpy_val == pytest.approx(my_val, rel=1e-4)
+
+    assert quadpy_val == pytest.approx(analytic_val, rel=1e-4)
+
+    assert my_val == pytest.approx(analytic_val, rel=1e-4)
+
+
+def test_perimeter_grad():
+    perimeter = simple_set.compute_perimeter()
+    grad = simple_set.compute_perimeter_gradient()
+    assert grad.shape == (simple_set.num_boundary_vertices, 2)
+
+    t = 1e-5
+    new_boundary_vertices = simple_set.boundary_vertices + t * grad
+    new_simple_set = SimpleSet(new_boundary_vertices)
+    new_perimeter = new_simple_set.compute_perimeter()
+
+    finite_diff = (new_perimeter - perimeter - t * np.sum(grad * grad)) / t
+
+    assert abs(finite_diff) < 1e-4
+
+
+def test_weighted_area_grad():
+    weighted_area = simple_set.compute_weighted_area(eta)
+    grad = simple_set.compute_weighted_area_gradient(eta)
+    assert grad.shape == (simple_set.num_boundary_vertices, 2)
+
+    t = 1e-5
+    new_boundary_vertices = simple_set.boundary_vertices + t * grad
+    simple_set.boundary_vertices = new_boundary_vertices
+    new_weighted_area = simple_set.compute_weighted_area(eta)
+
+    finite_diff = (new_weighted_area - weighted_area - t * np.sum(grad * grad)) / t
+
+    assert abs(finite_diff) < 1e-4
+

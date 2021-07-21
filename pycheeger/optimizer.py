@@ -1,7 +1,10 @@
 import numpy as np
 
 from .tools import resample
+from .plot_utils import plot_simple_set
 from .simple_set import SimpleSet
+
+import matplotlib.pyplot as plt
 
 
 class CheegerOptimizerState:
@@ -65,6 +68,8 @@ class CheegerOptimizer:
         former_obj = self.state.obj
         former_boundary_vertices = self.state.set.boundary_vertices
 
+        iteration = 0
+
         while not ag_condition:
             new_boundary_vertices = former_boundary_vertices - t * gradient
             self.state.update_boundary_vertices(new_boundary_vertices, f)
@@ -73,7 +78,11 @@ class CheegerOptimizer:
             ag_condition = (new_obj <= former_obj - self.alpha * t * np.linalg.norm(gradient) ** 2)
             t = self.beta * t
 
-    def run(self, f, initial_set):
+            iteration += 1
+
+        return iteration
+
+    def run(self, f, initial_set, verbose=True):
         convergence = False
         obj_tab = []
         grad_norm_tab = []
@@ -87,10 +96,13 @@ class CheegerOptimizer:
             grad_norm_tab.append(np.max(np.linalg.norm(gradient, axis=1)))
             obj_tab.append(self.state.obj)
 
-            self.perform_linesearch(f, gradient)
+            n_iter_linesearch = self.perform_linesearch(f, gradient)
 
             iteration += 1
             convergence = False
+
+            if verbose:
+                print("iteration {}: {} linesearch steps".format(iteration, n_iter_linesearch))
 
         if self.num_iter_resampling is not None and iteration % self.num_iter_resampling == 0:
             new_boundary_vertices = resample(self.state.set.boundary_vertices, num_points=self.num_points)

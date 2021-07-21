@@ -128,3 +128,6 @@ dmypy.json
 
 # experiments
 experiments/
+
+# cheeger grid
+pycheeger/cheeger_grid.py

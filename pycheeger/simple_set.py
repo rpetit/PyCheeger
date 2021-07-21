@@ -1,10 +1,10 @@
 import numpy as np
 import quadpy
 
-from .tools import winding, integrate_on_triangles, triangulate
+from .tools import winding, triangulate
 
 # scheme for numerical integration on segments
-SCHEME = quadpy.c1.gauss_patterson(4)
+SCHEME = quadpy.c1.gauss_patterson(2)
 
 
 class SimpleSet:
@@ -57,6 +57,7 @@ class SimpleSet:
     def boundary_vertices_indices(self):
         return np.arange(self.num_boundary_vertices)
 
+    # TODO: attention du coup self.boundary_vertices est vue comme une fonction, a voir si probleme avec numba
     @property
     def boundary_vertices(self):
         return self.mesh_vertices[self.boundary_vertices_indices]
@@ -124,7 +125,7 @@ class SimpleSet:
         else:
             triangles = self.mesh_vertices[self.mesh_faces]
 
-        return integrate_on_triangles(f, triangles)
+        return f.integrate_on_triangles(triangles)
 
     def compute_weighted_area(self, f):
         # TODO: decide whether output type instability should be dealt with or not
@@ -191,6 +192,7 @@ class SimpleSet:
 
         self.mesh_boundary_faces_indices = np.array(boundary_faces_indices)
 
+    # TODO: numba
     def compute_perimeter_gradient(self):
         """
         Compute the "gradient" of the perimeter
@@ -240,42 +242,22 @@ class SimpleSet:
         Vectorized computations are really nasty here, mainly because f can be vector valued.
 
         """
-        # TODO: clean up this mess
+        # TODO: externaliser calcul normales (et compiler ?)
 
         # rotation matrix used to compute outward normals
-        if self.is_clockwise:
-            rot = np.array([[0, -1], [1, 0]])
-        else:
-            rot = np.array([[0, 1], [-1, 0]])
+        rot = np.array([[0, -1], [1, 0]]) if self.is_clockwise else np.array([[0, 1], [-1, 0]])
 
         rolled_vertices1 = np.roll(self.boundary_vertices, 1, axis=0)
         rolled_vertices2 = np.roll(self.boundary_vertices, -1, axis=0)
 
-        t = 0.5 * (1 + SCHEME.points)
-        x1 = np.multiply.outer(1-t, rolled_vertices1) + np.multiply.outer(t, self.boundary_vertices)
-        x2 = np.multiply.outer(1-t, self.boundary_vertices) + np.multiply.outer(t, rolled_vertices2)
-
-        eval1_flat = f(np.reshape(x1, (-1, 2)))
-        eval2_flat = f(np.reshape(x2, (-1, 2)))
-
-        eval1 = np.reshape(eval1_flat, x1.shape[:2] + eval1_flat.shape[1:])
-        eval1 = eval1 * np.expand_dims(t, tuple(np.arange(1, eval1.ndim)))
-
-        eval2 = np.reshape(eval2_flat, x2.shape[:2] + eval2_flat.shape[1:])
-        eval2 = eval2 * np.expand_dims(1-t, tuple(np.arange(1, eval2.ndim)))
-
-        weights1 = 0.5 * np.sum(np.expand_dims(SCHEME.weights, tuple(np.arange(1, eval1.ndim))) * eval1, axis=0)
-        weights2 = 0.5 * np.sum(np.expand_dims(SCHEME.weights, tuple(np.arange(1, eval2.ndim))) * eval2, axis=0)
+        weights = f.integrate_on_polygonal_curve(self.boundary_vertices)
 
         normals1 = np.dot(self.boundary_vertices - rolled_vertices1, rot.T)
         normals2 = np.dot(rolled_vertices2 - self.boundary_vertices, rot.T)
 
-        gradient1 = np.expand_dims(np.moveaxis(weights1, 0, -1), -1) * \
-                    np.expand_dims(normals1, tuple(np.arange(weights1.ndim-1)))
-        gradient2 = np.expand_dims(np.moveaxis(weights2, 0, -1), -1) * \
-                    np.expand_dims(normals2, tuple(np.arange(weights2.ndim-1)))
+        gradient = weights[:, 0, None] * normals1 + weights[:, 1, None] * normals2
 
-        return gradient1 + gradient2
+        return gradient
 
 
 def disk(center, radius, num_vertices=20, max_tri_area=None):

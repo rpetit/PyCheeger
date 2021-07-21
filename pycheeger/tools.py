@@ -3,11 +3,10 @@ import quadpy
 import triangle
 
 import matplotlib.pyplot as plt
+from numba import jit
 
-from numba import jit, prange
 
-
-@jit(nopython=True, parallel=True)
+@jit(nopython=True)
 def winding(x, vertices):
     """
     Compute the winding number of a closed polygonal curve described by its vertices around the point x. This number is
@@ -28,7 +27,7 @@ def winding(x, vertices):
     """
     wn = 0
 
-    for i_current in prange(len(vertices)):
+    for i_current in range(len(vertices)):
         if i_current != len(vertices) - 1:
             i_next = i_current + 1
         else:
@@ -121,7 +120,7 @@ def triangulate(vertices, max_triangle_area=None, split_boundary=False, plot_res
 
 
 @jit(nopython=True)
-def find_threshold(x):
+def find_threshold(y):
     """
     Compute the value of the Lagrange multiplier involved in the projection of x into the unit l1 ball
 
@@ -145,7 +144,7 @@ def find_threshold(x):
            Series A, Springer, 2016, 158 (1), pp.575-585.
 
     """
-    y = np.sort(np.abs(x))[::-1]
+    # y = np.sort(np.abs(x))[::-1]
     j = len(y)
     stop = False
 
@@ -163,18 +162,61 @@ def find_threshold(x):
     return res
 
 
-def proj_unit_l1_ball(x):
+# @jit(nopython=True)
+# def find_threshold_bis(y):
+#     v = [y[0]]
+#     tilde_v = []
+#     rho = y[0] - 1
+#     for n in range(1, len(y)):
+#         if y[n] > rho:
+#             rho += (y[n] - rho) / (len(v) + 1)
+#             if rho > y[n] - 1:
+#                 v.append(y[n])
+#             else:
+#                 for x in v:
+#                     tilde_v.append(x)
+#                 v = [y[n]]
+#                 rho = y[n] - 1
+#     if len(tilde_v) > 0:
+#         for x in tilde_v:
+#             if x > rho:
+#                 v.append(x)
+#                 rho += (x - rho) / len(v)
+#     convergence = False
+#     while not convergence:
+#         i = 0
+#         convergence = True
+#         while i < len(v):
+#             if v[i] > rho:
+#                 i += 1
+#             else:
+#                 rho += (rho - v[i]) / len(v)
+#                 del v[i]
+#                 i = len(v)
+#                 convergence = False
+#     return rho
+
+
+@jit(nopython=True)
+def proj_two_one_unit_ball_aux(x, norm_row_x, thresh, res):
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                if norm_row_x[i, j] > thresh:
+                    res[i, j] = (norm_row_x[i, j] - thresh) * x[i, j] / norm_row_x[i, j]
+
+
+def proj_two_one_unit_ball(x):
     """
-    Projection onto the l1 unit ball
+    Projection onto the (2,1) unit ball
 
     Parameters
     ----------
-    x : array, shape (N,)
-        Vector to be projected
+    x : array, shape (N, M, 2)
+        Should be seen as a (N*M, 2) matrix to be projected
 
     Returns
     -------
-    res : array, shape (N,)
+    res : array, shape (N, M, 2)
         Projection
 
     Notes
@@ -187,18 +229,37 @@ def proj_unit_l1_ball(x):
            Series A, Springer, 2016, 158 (1), pp.575-585.
 
     """
-    if np.sum(np.abs(x)) > 1:
-        thresh = find_threshold(np.abs(x))
-        res = np.where(np.abs(x) > thresh, (1 - thresh / np.abs(x)) * x, 0)
+    norm_row_x = np.linalg.norm(x, axis=-1)
+    norm_x = np.sum(norm_row_x)
+
+    if norm_x > 1:
+        res = np.zeros_like(x)
+        y = np.sort(norm_row_x.ravel())[::-1]
+        thresh = find_threshold(y)
+        proj_two_one_unit_ball_aux(x, norm_row_x, thresh, res)
     else:
         res = x
 
     return res
 
 
-def prox_inf_norm(x, tau):
+# def proj_two_one_unit_ball_bis(x):
+#     norm_row_x = np.linalg.norm(x, axis=-1)
+#     norm_x = np.sum(norm_row_x)
+#
+#     if norm_x > 1:
+#         res = np.zeros_like(x)
+#         thresh = find_threshold_bis(norm_row_x.ravel())
+#         proj_two_one_unit_ball_aux(x, norm_row_x, thresh, res)
+#     else:
+#         res = x
+#
+#     return res
+
+
+def prox_two_inf_norm(x, tau):
     """
-    Proximal map of the l-infinity norm
+    Proximal map of the (2, infinity) norm
 
     Parameters
     ----------
@@ -212,10 +273,10 @@ def prox_inf_norm(x, tau):
 
     Notes
     -----
-    .. math:: prox_{\\tau \\, ||.||_{\\infty}}(x) = x - \\tau ~ \\text{proj}_{\\{||.||_{\\infty}\\leq 1\\}}(x / \\tau)
+    .. math:: prox_{\\tau \\, ||.||_{2,\\infty}}(x) = x - \\tau ~ \\text{proj}_{\\{||.||_{2,1}\\leq 1\\}}(x / \\tau)
 
     """
-    return x - tau * proj_unit_l1_ball(x / tau)
+    return x - tau * proj_two_one_unit_ball(x / tau)
 
 
 def prox_dot_prod(x, tau, a):
@@ -236,78 +297,20 @@ def prox_dot_prod(x, tau, a):
     return x - tau * a
 
 
-SCHEME = quadpy.t2.get_good_scheme(6)
-
-
-def integrate_on_triangles(f, triangles):
-    """
-    Numerical integration of f on a list of triangles
-
-    Parameters
-    ----------
-    f : function
-        Function to be integrated. f must handle array inputs with shape (N, 2). It can be vector valued
-    triangles : array, shape (N, 3, 2)
-        triangles[i, j] contains the coordinates of the j-th vertex of the i-th triangle
-
-    Returns
-    -------
-    array, shape (N,) or (N, D)
-        Value computed for the integral of f on each of the N triangles (if f takes values in dimension D, the shape of
-        the resulting array is (N, D))
-
-    Notes
-    -----
-    Here, quadpy is only used to extract the scheme's characteristics, in order to speed up computations (in quadpy,
-    the code handles arbitrary dimensions and is too generic)
-
-    """
-    num_triangles = len(triangles)
-    num_scheme_points = SCHEME.points.shape[1]
-
-    # vectorized computation of the triangles' edges length
-    a = np.linalg.norm(triangles[:, 1] - triangles[:, 0], axis=1)
-    b = np.linalg.norm(triangles[:, 2] - triangles[:, 1], axis=1)
-    c = np.linalg.norm(triangles[:, 2] - triangles[:, 0], axis=1)
-
-    # computation of the areas using Heron's formula
-    p = (a + b + c) / 2
-    area = np.sqrt(p * (p - a) * (p - b) * (p - c))
-
-    # x contains the list of points at which f should be evaluated (depends on the numerical integration scheme)
-    x = np.tensordot(triangles, SCHEME.points, axes=([1], [0]))  # shape (num_triangles, 2, num_scheme_points)
-    x = np.moveaxis(x, -1, 0)  # reshape to shape (num_scheme_points, num_triangles, 2)
-    x_flat = np.reshape(x, (-1, 2))  # reshape to shape (num_scheme_points * num_triangles, 2)
-
-    # evaluations of f are reshaped to shape (num_scheme_points, num_triangles,) or
-    # (num_scheme_points, num_triangles, D) if f is vector valued
-    evals_flat = f(x_flat)
-    evals = np.reshape(evals_flat, (num_scheme_points, num_triangles) + evals_flat.shape[1:])
-
-    # weighted sum of the evaluations to get the value of the integral on each triangle
-    weighted_evals = np.tensordot(SCHEME.weights, evals, axes=([0], [0]))
-
-    # a dimension is added to the array of areas if f is vector valued
-    return np.expand_dims(area, tuple(np.arange(1, weighted_evals.ndim))) * weighted_evals
-
-
 # TODO: deal with the case where the solution is a sum of two indicators of disjoint simple sets
-def postprocess_indicator(x, grad_mat):
+def postprocess_indicator(x):
     """
     Post process a piecewise constant function on a mesh to get an indicator function of a union of cells
 
     Parameters
     ----------
-    x : array, shape (N,)
+    x : array, shape (N + 2, N + 2)
         Values describing the piecewise constant function to be processed
-    grad_mat : array, shape (M, N)
-        Matrix representing the linear operator which maps the values describing a piecewise constant function to its
-        jumps on each edge of the mesh
 
     Returns
     -------
-    array, shape (N,)
-        Values of the indicator function on each cell of the mesh
+    array, shape (N, N)
+        Values of the indicator function on each pixel of the grid
 
     """
     res = np.zeros_like(x)
@@ -332,26 +335,85 @@ def postprocess_indicator(x, grad_mat):
         res[i1] = mean1
 
     # the output indicator function is normalized to have unit total variation
-    return res / np.linalg.norm(grad_mat.dot(res), ord=1)
+    res /= np.sum(np.linalg.norm(grad(res), axis=-1))
+    return res
 
 
-def run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm, verbose=False):
+@jit(nopython=True)
+def update_grad(u, res):
+    n = u.shape[0] - 2
+
+    for i in range(n + 1):
+        for j in range(n + 1):
+            res[i, j, 0] = u[i + 1, j] - u[i, j]
+            res[i, j, 1] = u[i, j + 1] - u[i, j]
+
+
+def grad(u):
+    n = u.shape[0] - 2
+    res = np.zeros((n + 1, n + 1, 2))
+    update_grad(u, res)
+    return res
+
+
+@jit(nopython=True)
+def update_adj_grad(phi, res):
+    n = phi.shape[0] - 1
+
+    for i in range(1, n + 1):
+        for j in range(1, n + 1):
+            res[i, j] = -(phi[i, j, 0] + phi[i, j, 1] - phi[i - 1, j, 0] - phi[i, j - 1, 1])
+
+
+def adj_grad(phi):
+    n = phi.shape[0] - 1
+    res = np.zeros((n + 2, n + 2))
+    update_adj_grad(phi, res)
+    return res
+
+
+def power_method(grid_size, n_iter=100):
+    x = np.random.random((grid_size + 2, grid_size + 2))
+    x[0, :] = 0
+    x[grid_size + 1, :] = 0
+    x[:, 0] = 0
+    x[:, grid_size + 1] = 0
+
+    for i in range(n_iter):
+        x = adj_grad(grad(x))
+        x = x / np.linalg.norm(x)
+
+    return np.sqrt(np.sum(x * (adj_grad(grad(x)))) / np.linalg.norm(x))
+
+
+def integrate_on_grid(eta, grid_size):
+    res = np.zeros((grid_size + 2, grid_size + 2))
+    h = 2 / grid_size
+
+    for i in range(1, grid_size + 1):
+        for j in range(1, grid_size + 1):
+            a, b = -1 + (i - 1) * h, -1 + (j - 1) * h
+            res[i, j] = eta.integrate_on_square(a, b, h)
+
+    return res
+
+
+def run_primal_dual(grid_size, eta_bar, max_iter, verbose=False, plot=False):
     """
     Solves the "fixed mesh weighted Cheeger problem" by running a primal dual algorithm
 
     Parameters
     ----------
-    mesh : Mesh
-        Triangle mesh made of N triangles and M edges
+    grid_size
     eta_bar : array, shape (N, 2)
         Integral of the weight function on each triangle
     max_iter : integer
         Maximum number of iterations (for now, exact number of iterations, since no convergence criterion is
         implemented yet)
-    grad_mat_norm : float
-        Norm of the gradient operator for piecewise constant functions on the mesh
     verbose : bool, defaut False
         Whether to print some information at the end of the algorithm or not
+    plot : bool, defaut False
+        Whether to regularly plot the image given by the primal variable or not
 
     Returns
     -------
@@ -359,22 +421,80 @@ def run_primal_dual(mesh, eta_bar, max_iter, grad_mat_norm, verbose=False):
         Values describing a piecewise constant function on the mesh, which solves the fixed mesh weighted Cheeger problem
 
     """
-    sigma = 0.99 / grad_mat_norm
-    tau = 0.99 / grad_mat_norm
+    grad_op_norm = power_method(grid_size)
 
-    phi = np.zeros(mesh.num_edges)  # dual variable
-    u = np.zeros(mesh.num_faces)  # primal variable
+    grad_buffer = np.zeros((grid_size + 1, grid_size + 1, 2))
+    adj_grad_buffer = np.zeros((grid_size + 2, grid_size + 2))
+
+    sigma = 0.99 / grad_op_norm
+    tau = 0.99 / grad_op_norm
+
+    phi = np.zeros((grid_size + 1, grid_size + 1, 2))  # dual variable
+    u = np.zeros((grid_size + 2, grid_size + 2))  # primal variable
     former_u = u
 
-    for _ in range(max_iter):
-        phi = prox_inf_norm(phi + sigma * mesh.grad_mat.dot(2 * u - former_u), sigma)
+    eta_bar_pad = np.zeros((grid_size + 2, grid_size + 2))
+    eta_bar_pad[1:grid_size+1, 1:grid_size+1] = eta_bar
+
+    for iter in range(max_iter):
+        update_grad(2 * u - former_u, grad_buffer)
+        phi = prox_two_inf_norm(phi + sigma * grad_buffer, sigma)
 
         former_u = u
-        u = prox_dot_prod(u - tau * mesh.grad_mat.T.dot(phi), tau, eta_bar)
+        update_adj_grad(phi, adj_grad_buffer)
+        u = prox_dot_prod(u - tau * adj_grad_buffer, tau, eta_bar_pad)
 
     if verbose:
         print(np.linalg.norm(u - former_u) / np.linalg.norm(u))
-        print(np.linalg.norm(mesh.grad_mat.dot(u), ord=1))
 
-    # the output is post processed so that it is an indicator function and has exactly unit total variation
-    return postprocess_indicator(u, mesh.grad_mat)
+    return u
+
+
+def extract_contour(u):
+    v = postprocess_indicator(u)
+
+    n = v.shape[0] - 2
+    h = 2 / n
+    grad_v = grad(v)
+    edges = []
+
+    for i in range(n+1):
+        for j in range(n+1):
+            if np.abs(grad_v[i, j, 0]) > 0:
+                x, y = -1 + i * h, -1 + (j - 1) * h
+                edges.append([[x, y], [x, y + h]])
+            if np.abs(grad_v[i, j, 1]) > 0:
+                x, y = - 1 + (i - 1) * h, -1 + j * h
+                edges.append([[x, y], [x + h, y]])
+
+    edges = np.array(edges)
+
+    path_vertices = [edges[0][0], edges[0][1]]
+
+    mask = np.ones(len(edges), dtype=bool)
+    mask[0] = False
+
+    done = False
+
+    while not done:
+        prev_vertex = path_vertices[-1]
+        where_next = np.where(np.isclose(edges[mask], prev_vertex[None, None, :]).all(2))
+
+        if where_next[0].size == 0:
+            done = True
+
+        else:
+            i, j = where_next[0][0], where_next[1][0]
+
+            next_vertex = edges[mask][i, 1 - j]
+            path_vertices.append(next_vertex)
+
+            count = 0
+            k = 0
+            while count < i + 1:
+                if mask[k]:
+                    count += 1
+                k += 1
+            mask[k-1] = False
+
+    return np.array(path_vertices[:-1])

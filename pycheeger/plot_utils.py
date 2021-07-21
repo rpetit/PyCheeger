@@ -5,25 +5,26 @@ from matplotlib.tri import Triangulation
 
 # TODO: clean, comment, write docstrings
 
-def plot_primal_dual_results(mesh, u, eta_bar):
+def plot_primal_dual_results(u, eta_bar):
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(7, 14))
 
-    triangulation = Triangulation(mesh.vertices[:, 0], mesh.vertices[:, 1], mesh.faces)
+    grid_size = u.shape[0]
+    h = 2 / grid_size
 
-    eta_avg = eta_bar / np.array([mesh.get_face_area(face_index) for face_index in range(mesh.num_faces)])
+    eta_avg = eta_bar / h ** 2
 
-    v_abs_max = max(np.max(np.abs(u)), np.max(np.abs(eta_avg)))
+    v_abs_max = np.max(np.abs(eta_avg))
 
-    axs[0].triplot(triangulation, color='black', alpha=0.1)
+    im = axs[0].imshow(eta_avg.T, origin='lower', cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     axs[0].axis('equal')
     axs[0].axis('off')
-    im = axs[0].tripcolor(triangulation, facecolors=eta_avg, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     fig.colorbar(im, ax=axs[0])
 
-    axs[1].triplot(triangulation, color='black', alpha=0.1)
+    v_abs_max = np.max(np.abs(u))
+
+    im = axs[1].imshow(u.T, origin='lower', cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     axs[1].axis('equal')
     axs[1].axis('off')
-    im = axs[1].tripcolor(triangulation, facecolors=u, cmap='bwr', vmin=-v_abs_max, vmax=v_abs_max)
     fig.colorbar(im, ax=axs[1])
 
     plt.show()
@@ -61,8 +62,8 @@ def plot_simple_set(simple_set, eta=None, display_inner_mesh=False, boundary_col
 
     ax.axis('equal')
     ax.axis('off')
-    # ax.set_xlim(-1, 1)
-    # ax.set_ylim(-1, 1)
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
     plt.show()
 
 
@@ -101,4 +102,23 @@ def plot_simple_functions(u1, u2, display_inner_mesh=False, boundary_color='blac
     if save_path is not None:
         plt.savefig(save_path, dpi=300, bbox_inches='tight', pad_inches=0)
 
+    plt.show()
+
+
+def plot_gradient(boundary_vertices, gradient):
+    fig, ax = plt.subplots(figsize=(7, 7))
+
+    x_curve = np.append(boundary_vertices[:, 0], boundary_vertices[0, 0])
+    y_curve = np.append(boundary_vertices[:, 1], boundary_vertices[0, 1])
+    u = np.append(gradient[:, 0], gradient[0, 0])
+    v = np.append(gradient[:, 1], gradient[0, 1])
+
+    ax.plot(x_curve, y_curve, color='black')
+
+    ax.quiver(x_curve[::2], y_curve[::2], u[::2], v[::2], color='red')
+
+    ax.axis('equal')
+    ax.axis('off')
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
     plt.show()

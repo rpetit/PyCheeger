@@ -195,38 +195,6 @@ class Mesh:
 
         return np.sqrt(p * (p - a) * (p - b) * (p - c))  # Heron's formula
 
-    def build_grad_matrix(self):
-        """
-        Compute the gradient matrix associated to the mesh
-
-        The gradient is the linear operator mapping a vector of length M (the values taken by a piecewise constant
-        function on the mesh) to a vector of length K (the jumps / values taken by the gradient on each edge of the
-        mesh), M being the number of faces in the mesh, and K being the number of edges.
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            The gradient matrix
-
-        """
-        # TODO: comment and test
-        indptr = [0]
-        indices = []
-        data = []
-
-        for i in range(self.num_edges):
-            edge = self.edges[i]
-            edge_length = self.get_edge_length(edge)
-            edge_adjacent_faces = self.get_edge_adjacent_faces(edge)
-
-            indptr.append(indptr[-1] + len(edge_adjacent_faces))
-
-            for face_index in edge_adjacent_faces:
-                indices.append(face_index)
-                data.append(-self.get_orientation(face_index, edge) * edge_length)
-
-        return csr_matrix((data, indices, indptr))
-
     def integrate(self, f):
         """
         Compute the integral of a given function on each face of the mesh
