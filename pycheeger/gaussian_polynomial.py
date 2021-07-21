@@ -89,15 +89,15 @@ def generate_line_aux_2(grid, weights, std):
 
                 for j in range(grid.shape[0]):
                     squared_norm = (x[0] - grid[j, 0]) ** 2 + (x[1] - grid[j, 1]) ** 2
-                    res[i, 0] += scheme_weights[k] * weights[j] * exp(scale * squared_norm)
+                    res[i, 0] += scheme_weights[k] * weights[j] * scheme_points[k] * exp(scale * squared_norm)
 
                 x = (1 - scheme_points[k]) * vertices[i] + scheme_points[k] * vertices[i + 1]
 
                 for j in range(grid.shape[0]):
                     squared_norm = (x[0] - grid[j, 0]) ** 2 + (x[1] - grid[j, 1]) ** 2
-                    res[i, 1] += scheme_weights[k] * weights[j] * exp(scale * squared_norm)
+                    res[i, 1] += scheme_weights[k] * weights[j] * scheme_points[k] * exp(scale * squared_norm)
 
-            res[i] *= edge_length / 4
+            res[i] *= edge_length / 2
 
     return aux
 

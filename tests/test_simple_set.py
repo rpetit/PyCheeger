@@ -1,7 +1,8 @@
 import pytest
 import quadpy
 
-from math import pi, exp
+from numpy import pi, exp, sqrt, cosh, sinh
+from scipy.special import erf
 
 from pycheeger.gaussian_polynomial import *
 from pycheeger.simple_set import *
@@ -40,6 +41,36 @@ def test_weighted_area():
     assert my_val == pytest.approx(analytic_val, rel=1e-4)
 
 
+def test_line_integral():
+    vertices = np.array([[0.0, 0.0], [1.0, 0.0]])
+
+    scheme = quadpy.c1.gauss_patterson(8)
+
+    def func_1(t):
+        return t * eta(np.multiply.outer(t, vertices[0]) + np.multiply.outer(1 - t, vertices[1]))
+
+    # def func_1(t):
+    #     return weight * t * exp(-np.linalg.norm(np.multiply.outer(t, vertices[0]) + np.multiply.outer(1-t, vertices[1]), axis=-1) ** 2 / (2 * std ** 2))
+
+    quadpy_val_1 = scheme.integrate(func_1, [0.0, 1.0])
+
+    def func_2(t):
+        return t * eta(np.multiply.outer(1 - t, vertices[0]) + np.multiply.outer(t, vertices[1]))
+
+    # def func_2(t):
+    #     return weight * t * exp(-np.linalg.norm(np.multiply.outer(1-t, vertices[0]) + np.multiply.outer(t, vertices[1]), axis=-1) ** 2 / (2 * std ** 2))
+
+    quadpy_val_2 = scheme.integrate(func_2, [0.0, 1.0])
+
+    my_val = eta.integrate_on_polygonal_curve(vertices)
+
+    assert quadpy_val_1 == pytest.approx(my_val[0, 0], rel=1e-4)
+    assert quadpy_val_2 == pytest.approx(my_val[0, 1], rel=1e-4)
+    assert my_val[0, 0] == my_val[1, 1]
+    assert my_val[0, 1] == my_val[1, 0]
+
+
+# TODO: revoir...
 def test_perimeter_grad():
     perimeter = simple_set.compute_perimeter()
     grad = simple_set.compute_perimeter_gradient()
@@ -55,6 +86,7 @@ def test_perimeter_grad():
     assert abs(finite_diff) < 1e-4
 
 
+# TODO: revoir...
 def test_weighted_area_grad():
     weighted_area = simple_set.compute_weighted_area(eta)
     grad = simple_set.compute_weighted_area_gradient(eta)

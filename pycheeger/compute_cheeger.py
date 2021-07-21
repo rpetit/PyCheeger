@@ -59,16 +59,6 @@ def compute_cheeger(eta, grid_size_fm, max_iter_fm=10000, plot_results_fm=False,
 
     boundary_vertices = extract_contour(u)
 
-    # TODO: plot simple curve
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(figsize=(7, 7))
-    ax.plot(boundary_vertices[:, 0], boundary_vertices[:, 1], color='black')
-    ax.axis('equal')
-    ax.axis('off')
-    ax.set_xlim(-1, 1)
-    ax.set_ylim(-1, 1)
-    plt.show()
-
     # initial set for the local descent
     boundary_vertices = resample(boundary_vertices, num_boundary_vertices_ld)
     simple_set = SimpleSet(boundary_vertices, max_tri_area_ld)

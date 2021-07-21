@@ -252,8 +252,11 @@ class SimpleSet:
 
         weights = f.integrate_on_polygonal_curve(self.boundary_vertices)
 
+        # je savais qu'un jour j'allais me faire avoir ... attention à normaliser ...
         normals1 = np.dot(self.boundary_vertices - rolled_vertices1, rot.T)
+        normals1 /= np.linalg.norm(normals1, axis=-1)[:, None]
         normals2 = np.dot(rolled_vertices2 - self.boundary_vertices, rot.T)
+        normals2 /= np.linalg.norm(normals2, axis=-1)[:, None]
 
         gradient = weights[:, 0, None] * normals1 + weights[:, 1, None] * normals2
 
