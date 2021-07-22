@@ -72,14 +72,14 @@ class CheegerOptimizer:
             self.state.update_boundary_vertices(new_boundary_vertices, f)
             new_obj = self.state.obj
 
-            ag_condition = (new_obj <= former_obj - self.alpha * t * np.sum(np.linalg.norm(gradient, axis=-1) ** 2))
+            ag_condition = (new_obj <= former_obj - self.alpha * t * np.sum(gradient ** 2))
             t = self.beta * t
 
             iteration += 1
 
-        displacement_norm = np.max(np.linalg.norm(new_boundary_vertices - former_boundary_vertices, axis=-1))
+        max_displacement = np.max(np.linalg.norm(new_boundary_vertices - former_boundary_vertices, axis=-1))
 
-        return iteration, displacement_norm
+        return iteration, max_displacement
 
     def run(self, f, initial_set, verbose=True):
         convergence = False
@@ -95,10 +95,10 @@ class CheegerOptimizer:
             grad_norm_tab.append(np.sum(np.linalg.norm(gradient, axis=-1)))
             obj_tab.append(self.state.obj)
 
-            n_iter_linesearch, displacement_norm = self.perform_linesearch(f, gradient)
+            n_iter_linesearch, max_displacement = self.perform_linesearch(f, gradient)
 
             iteration += 1
-            convergence = (grad_norm_tab[-1] < self.eps_stop)
+            convergence = (max_displacement < self.eps_stop)
 
             if verbose:
                 print("iteration {}: {} linesearch steps".format(iteration, n_iter_linesearch))

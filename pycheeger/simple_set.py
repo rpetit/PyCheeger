@@ -224,7 +224,7 @@ class SimpleSet:
 
         return gradient
 
-    def compute_weighted_area_gradient(self, f):
+    def compute_weighted_area_gradient(self, f, weights=None):
         """
         Compute the "gradient" of the weighted area, for a given weight function
 
@@ -242,23 +242,24 @@ class SimpleSet:
         Vectorized computations are really nasty here, mainly because f can be vector valued.
 
         """
-        # TODO: externaliser calcul normales (et compiler ?)
-
         # rotation matrix used to compute outward normals
         rot = np.array([[0, -1], [1, 0]]) if self.is_clockwise else np.array([[0, 1], [-1, 0]])
 
         rolled_vertices1 = np.roll(self.boundary_vertices, 1, axis=0)
         rolled_vertices2 = np.roll(self.boundary_vertices, -1, axis=0)
 
-        weights = f.integrate_on_polygonal_curve(self.boundary_vertices)
+        if weights is None:
+            weights = f.integrate_on_polygonal_curve(self.boundary_vertices)
 
-        # je savais qu'un jour j'allais me faire avoir ... attention à normaliser ...
         normals1 = np.dot(self.boundary_vertices - rolled_vertices1, rot.T)
         normals1 /= np.linalg.norm(normals1, axis=-1)[:, None]
         normals2 = np.dot(rolled_vertices2 - self.boundary_vertices, rot.T)
         normals2 /= np.linalg.norm(normals2, axis=-1)[:, None]
 
-        gradient = weights[:, 0, None] * normals1 + weights[:, 1, None] * normals2
+        if weights.ndim == 2:
+            gradient = weights[:, 0, None] * normals1 + weights[:, 1, None] * normals2
+        else:
+            gradient = weights[:, :, 0, None] * normals1[:, None, :] + weights[:, :, 1, None] * normals2[:, None, :]
 
         return gradient
 

@@ -65,9 +65,9 @@ def test_line_integral():
     my_val = eta.integrate_on_polygonal_curve(vertices)
 
     assert quadpy_val_1 == pytest.approx(my_val[0, 0], rel=1e-4)
-    assert quadpy_val_2 == pytest.approx(my_val[0, 1], rel=1e-4)
-    assert my_val[0, 0] == my_val[1, 1]
-    assert my_val[0, 1] == my_val[1, 0]
+    assert quadpy_val_2 == pytest.approx(my_val[1, 0], rel=1e-4)
+    assert my_val[0, 0] == my_val[0, 1]
+    assert my_val[1, 0] == my_val[1, 1]
 
 
 # TODO: revoir...

@@ -5,7 +5,7 @@ from numpy import exp
 from numba import jit, prange
 
 
-def generate_eval_aux_2(grid, weights, std):
+def generate_eval_aux(grid, weights, std):
     scale = - 1 / (2 * std ** 2)
 
     @jit(nopython=True, parallel=True)
@@ -18,7 +18,7 @@ def generate_eval_aux_2(grid, weights, std):
     return aux
 
 
-def generate_square_aux_2(grid, weights, std):
+def generate_square_aux(grid, weights, std):
     scheme = quadpy.c2.get_good_scheme(3)
     scheme_weights = scheme.weights
     scheme_points = (1 + scheme.points.T) / 2
@@ -41,7 +41,7 @@ def generate_square_aux_2(grid, weights, std):
     return aux
 
 
-def generate_triangle_aux_2(grid, weights, std):
+def generate_triangle_aux(grid, weights, std):
     scheme = quadpy.t2.get_good_scheme(5)
     scheme_weights = scheme.weights
     scheme_points = scheme.points.T
@@ -72,7 +72,7 @@ def generate_triangle_aux_2(grid, weights, std):
     return aux
 
 
-def generate_line_aux_2(grid, weights, std):
+def generate_line_aux(grid, weights, std):
     scheme = quadpy.c1.gauss_patterson(3)
     scheme_weights = scheme.weights
     scheme_points = (1 + scheme.points) / 2
@@ -81,23 +81,29 @@ def generate_line_aux_2(grid, weights, std):
     @jit(nopython=True, parallel=True)
     def aux(vertices, res):
         for i in prange(len(vertices)):
-            edge_length = np.sqrt((vertices[(i+1) % len(vertices), 0] - vertices[i, 0]) ** 2 +
-                                  (vertices[(i+1) % len(vertices), 1] - vertices[i, 1]) ** 2)
+            edge_length = np.sqrt((vertices[(i + 1) % len(vertices), 0] - vertices[i, 0]) ** 2 +
+                                  (vertices[(i + 1) % len(vertices), 1] - vertices[i, 1]) ** 2)
 
             for k in range(scheme_weights.size):
-                x = scheme_points[k] * vertices[i] + (1 - scheme_points[k]) * vertices[i + 1]
+                x = scheme_points[k] * vertices[i] + (1 - scheme_points[k]) * vertices[(i + 1) % len(vertices)]
 
                 for j in range(grid.shape[0]):
                     squared_norm = (x[0] - grid[j, 0]) ** 2 + (x[1] - grid[j, 1]) ** 2
                     res[i, 0] += scheme_weights[k] * weights[j] * scheme_points[k] * exp(scale * squared_norm)
 
-                x = (1 - scheme_points[k]) * vertices[i] + scheme_points[k] * vertices[i + 1]
+            res[i, 0] *= edge_length / 2
+
+            edge_length = np.sqrt((vertices[i, 0] - vertices[i - 1, 0]) ** 2 +
+                                  (vertices[i, 1] - vertices[i - 1, 1]) ** 2)
+
+            for k in range(scheme_weights.size):
+                x = scheme_points[k] * vertices[i] + (1 - scheme_points[k]) * vertices[i - 1]
 
                 for j in range(grid.shape[0]):
                     squared_norm = (x[0] - grid[j, 0]) ** 2 + (x[1] - grid[j, 1]) ** 2
                     res[i, 1] += scheme_weights[k] * weights[j] * scheme_points[k] * exp(scale * squared_norm)
 
-            res[i] *= edge_length / 2
+            res[i, 1] *= edge_length / 2
 
     return aux
 
@@ -108,10 +114,10 @@ class GaussianPolynomial:
         self.weights = weights
         self.std = std
 
-        self._eval_aux = generate_eval_aux_2(self.grid, self.weights, self.std)
-        self._square_aux = generate_square_aux_2(self.grid, self.weights, self.std)
-        self._triangle_aux = generate_triangle_aux_2(self.grid, self.weights, self.std)
-        self._line_aux = generate_line_aux_2(self.grid, self.weights, self.std)
+        self._eval_aux = generate_eval_aux(self.grid, self.weights, self.std)
+        self._square_aux = generate_square_aux(self.grid, self.weights, self.std)
+        self._triangle_aux = generate_triangle_aux(self.grid, self.weights, self.std)
+        self._line_aux = generate_line_aux(self.grid, self.weights, self.std)
 
     @property
     def grid_size(self):

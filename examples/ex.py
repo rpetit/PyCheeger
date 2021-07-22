@@ -18,7 +18,7 @@ start = time.time()
 simple_set, obj_tab, grad_norm_tab = compute_cheeger(eta,
                                                      grid_size_fm=80, max_iter_fm=5000, plot_results_fm=True,
                                                      num_boundary_vertices_ld=75, max_tri_area_ld=1e-2,
-                                                     step_size_ld=1e-2, max_iter_ld=1000, convergence_tol_ld=1e-7,
+                                                     step_size_ld=1e-2, max_iter_ld=1000, convergence_tol_ld=1e-10,
                                                      num_iter_resampling_ld=10, plot_results_ld=True)
 
 plt.plot(obj_tab)
@@ -29,4 +29,5 @@ plt.show()
 
 end = time.time()
 
+print(obj_tab[-1])
 print(end - start)

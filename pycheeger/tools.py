@@ -3,7 +3,7 @@ import quadpy
 import triangle
 
 import matplotlib.pyplot as plt
-from numba import jit
+from numba import jit, prange
 
 
 @jit(nopython=True)
@@ -197,12 +197,12 @@ def find_threshold(y):
 #     return rho
 
 
-@jit(nopython=True)
+@jit(nopython=True, parallel=True)
 def proj_two_one_unit_ball_aux(x, norm_row_x, thresh, res):
-        for i in range(x.shape[0]):
-            for j in range(x.shape[1]):
-                if norm_row_x[i, j] > thresh:
-                    res[i, j] = (norm_row_x[i, j] - thresh) * x[i, j] / norm_row_x[i, j]
+    for i in prange(x.shape[0]):
+        for j in prange(x.shape[1]):
+            if norm_row_x[i, j] > thresh:
+                res[i, j] = (norm_row_x[i, j] - thresh) * x[i, j] / norm_row_x[i, j]
 
 
 def proj_two_one_unit_ball(x):
@@ -339,12 +339,12 @@ def postprocess_indicator(x):
     return res
 
 
-@jit(nopython=True)
+@jit(nopython=True, parallel=True)
 def update_grad(u, res):
     n = u.shape[0] - 2
 
-    for i in range(n + 1):
-        for j in range(n + 1):
+    for i in prange(n + 1):
+        for j in prange(n + 1):
             res[i, j, 0] = u[i + 1, j] - u[i, j]
             res[i, j, 1] = u[i, j + 1] - u[i, j]
 
@@ -356,12 +356,12 @@ def grad(u):
     return res
 
 
-@jit(nopython=True)
+@jit(nopython=True, parallel=True)
 def update_adj_grad(phi, res):
     n = phi.shape[0] - 1
 
-    for i in range(1, n + 1):
-        for j in range(1, n + 1):
+    for i in prange(1, n + 1):
+        for j in prange(1, n + 1):
             res[i, j] = -(phi[i, j, 0] + phi[i, j, 1] - phi[i - 1, j, 0] - phi[i, j - 1, 1])
 
 
@@ -384,18 +384,6 @@ def power_method(grid_size, n_iter=100):
         x = x / np.linalg.norm(x)
 
     return np.sqrt(np.sum(x * (adj_grad(grad(x)))) / np.linalg.norm(x))
-
-
-def integrate_on_grid(eta, grid_size):
-    res = np.zeros((grid_size + 2, grid_size + 2))
-    h = 2 / grid_size
-
-    for i in range(1, grid_size + 1):
-        for j in range(1, grid_size + 1):
-            a, b = -1 + (i - 1) * h, -1 + (j - 1) * h
-            res[i, j] = eta.integrate_on_square(a, b, h)
-
-    return res
 
 
 def run_primal_dual(grid_size, eta_bar, max_iter, verbose=False, plot=False):
