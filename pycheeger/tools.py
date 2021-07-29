@@ -45,7 +45,7 @@ def winding(x, vertices):
     return wn
 
 
-def resample(curve, num_points):
+def resample(curve, num_points=None, point_density=None):
     """
     Resample a closed polygonal chain
 
@@ -63,15 +63,23 @@ def resample(curve, num_points):
         Resampled curve
 
     """
+    assert (num_points is None) != (point_density is None)
+
     periodized_curve = np.concatenate([curve, [curve[0]]])
 
     # computation of the curvilinear absicssa
     curvabs = np.concatenate([[0], np.cumsum(np.linalg.norm(periodized_curve[1:] - periodized_curve[:-1], axis=1))])
+    curve_length = curvabs[-1]
     curvabs = curvabs / curvabs[-1]
 
+    if point_density is not None:
+        actual_num_points = int(point_density * curve_length)
+    else:
+        actual_num_points = num_points
+
     # linear interpolation
-    new_x = np.interp(np.arange(num_points) / num_points, curvabs, periodized_curve[:, 0])
-    new_y = np.interp(np.arange(num_points) / num_points, curvabs, periodized_curve[:, 1])
+    new_x = np.interp(np.arange(actual_num_points) / actual_num_points, curvabs, periodized_curve[:, 0])
+    new_y = np.interp(np.arange(actual_num_points) / actual_num_points, curvabs, periodized_curve[:, 1])
 
     return np.stack([new_x, new_y], axis=1)
 
@@ -162,39 +170,39 @@ def find_threshold(y):
     return res
 
 
-# @jit(nopython=True)
-# def find_threshold_bis(y):
-#     v = [y[0]]
-#     tilde_v = []
-#     rho = y[0] - 1
-#     for n in range(1, len(y)):
-#         if y[n] > rho:
-#             rho += (y[n] - rho) / (len(v) + 1)
-#             if rho > y[n] - 1:
-#                 v.append(y[n])
-#             else:
-#                 for x in v:
-#                     tilde_v.append(x)
-#                 v = [y[n]]
-#                 rho = y[n] - 1
-#     if len(tilde_v) > 0:
-#         for x in tilde_v:
-#             if x > rho:
-#                 v.append(x)
-#                 rho += (x - rho) / len(v)
-#     convergence = False
-#     while not convergence:
-#         i = 0
-#         convergence = True
-#         while i < len(v):
-#             if v[i] > rho:
-#                 i += 1
-#             else:
-#                 rho += (rho - v[i]) / len(v)
-#                 del v[i]
-#                 i = len(v)
-#                 convergence = False
-#     return rho
+@jit(nopython=True)
+def find_threshold_bis(y):
+    v = [y[0]]
+    tilde_v = []
+    rho = y[0] - 1
+    for n in range(1, len(y)):
+        if y[n] > rho:
+            rho += (y[n] - rho) / (len(v) + 1)
+            if rho > y[n] - 1:
+                v.append(y[n])
+            else:
+                for x in v:
+                    tilde_v.append(x)
+                v = [y[n]]
+                rho = y[n] - 1
+    if len(tilde_v) > 0:
+        for x in tilde_v:
+            if x > rho:
+                v.append(x)
+                rho += (x - rho) / len(v)
+    convergence = False
+    while not convergence:
+        i = 0
+        convergence = True
+        while i < len(v):
+            if v[i] > rho:
+                i += 1
+            else:
+                rho += (rho - v[i]) / len(v)
+                del v[i]
+                i = len(v)
+                convergence = False
+    return rho
 
 
 @jit(nopython=True, parallel=True)
@@ -386,7 +394,7 @@ def power_method(grid_size, n_iter=100):
     return np.sqrt(np.sum(x * (adj_grad(grad(x)))) / np.linalg.norm(x))
 
 
-def run_primal_dual(grid_size, eta_bar, max_iter, verbose=False, plot=False):
+def run_primal_dual(grid_size, eta_bar, max_iter=10000, convergence_tol=None, verbose=False, plot=False):
     """
     Solves the "fixed mesh weighted Cheeger problem" by running a primal dual algorithm
 
@@ -424,13 +432,22 @@ def run_primal_dual(grid_size, eta_bar, max_iter, verbose=False, plot=False):
     eta_bar_pad = np.zeros((grid_size + 2, grid_size + 2))
     eta_bar_pad[1:grid_size+1, 1:grid_size+1] = eta_bar
 
-    for iter in range(max_iter):
+    convergence = False
+    iter = 0
+
+    while not convergence:
         update_grad(2 * u - former_u, grad_buffer)
         phi = prox_two_inf_norm(phi + sigma * grad_buffer, sigma)
 
-        former_u = u
+        former_u = np.copy(u)  # TODO: check copy
         update_adj_grad(phi, adj_grad_buffer)
         u = prox_dot_prod(u - tau * adj_grad_buffer, tau, eta_bar_pad)
+        iter += 1
+
+        if convergence_tol is None:
+            convergence = iter > max_iter
+        else:
+            convergence = np.linalg.norm(u - former_u) / np.linalg.norm(u) < convergence_tol
 
     if verbose:
         print(np.linalg.norm(u - former_u) / np.linalg.norm(u))

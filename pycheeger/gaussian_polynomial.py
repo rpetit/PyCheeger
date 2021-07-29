@@ -109,10 +109,11 @@ def generate_line_aux(grid, weights, std):
 
 
 class GaussianPolynomial:
-    def __init__(self, grid, weights, std):
+    def __init__(self, grid, weights, std, normalization=False):
         self.grid = grid
         self.weights = weights
         self.std = std
+        self.normalization = normalization
 
         self._eval_aux = generate_eval_aux(self.grid, self.weights, self.std)
         self._square_aux = generate_square_aux(self.grid, self.weights, self.std)
@@ -131,6 +132,8 @@ class GaussianPolynomial:
         else:
             res = np.zeros(x.shape[0])
             self._eval_aux(x, res)
+        if self.normalization:
+            res = res / (2*np.pi * self.std**2)
         return res
 
     def integrate_on_pixel_grid(self, grid_size):

@@ -45,11 +45,14 @@ class CheegerOptimizerState:
 
 
 class CheegerOptimizer:
-    def __init__(self, step_size, max_iter, eps_stop, num_points, max_tri_area, num_iter_resampling, alpha, beta):
+    def __init__(self, step_size, max_iter, eps_stop, num_points, point_density, max_tri_area, num_iter_resampling,
+                 alpha, beta):
+
         self.step_size = step_size
         self.max_iter = max_iter
         self.eps_stop = eps_stop
         self.num_points = num_points
+        self.point_density = point_density
         self.max_tri_area = max_tri_area
         self.num_iter_resampling = num_iter_resampling
         self.alpha = alpha
@@ -103,9 +106,10 @@ class CheegerOptimizer:
             if verbose:
                 print("iteration {}: {} linesearch steps".format(iteration, n_iter_linesearch))
 
-        if self.num_iter_resampling is not None and iteration % self.num_iter_resampling == 0:
-            new_boundary_vertices = resample(self.state.set.boundary_vertices, num_points=self.num_points)
-            new_set = SimpleSet(new_boundary_vertices, max_tri_area=self.max_tri_area)
-            self.state.update_set(new_set, f)
+            if self.num_iter_resampling is not None and iteration % self.num_iter_resampling == 0:
+                new_boundary_vertices = resample(self.state.set.boundary_vertices, num_points=self.num_points,
+                                                 point_density=self.point_density)
+                new_set = SimpleSet(new_boundary_vertices, max_tri_area=self.max_tri_area)
+                self.state.update_set(new_set, f)
 
         return self.state.set, obj_tab, grad_norm_tab
