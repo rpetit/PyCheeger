@@ -1,11 +1,10 @@
 # PyCheeger
+Numerical computation of (weighted) Cheeger sets (under active development).
 
 <p align="center">
   <img src="example.png">
 </p>
 
-Numerical computation of (weighted) Cheeger sets (under active development).
+Acknowledgments: we thank Robert Tovey for carefuly reviewing this implementation, and for suggesting several modifications that significantly improved its performance.
 
-Acknowledgments : Robert Tovey
-
-[Doc](https://rpetit.github.io/PyCheeger)
+[Documentation](https://rpetit.github.io/PyCheeger)
